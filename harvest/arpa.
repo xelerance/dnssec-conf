@@ -1,0 +1,6 @@
+//; ./dnskey-pull -a -s F.ROOT-SERVERS.NET. -o harvest/arpa. arpa
+//; 2008-11-04 14:15
+"E164.arpa." 257 3 5 "AwEAAb4lkEZpVI5Un0Vjw6rBsqstL+Uqkr/ctHcIyoYcJCBr+X+ODhbnprxA7RaA9nHA82fgOmOdEi6EreNDmUd7YG4gLuLXxYJDDZjUWBTWR9eOpeU6XaZvzJKQ1NG2bAzENtQp8z9uAnsisYOiKX65/gFsDa8rPx7KS3I8SWQUAlOy05Rmc0moJgy+jLmcNT4xHiNNAmLuXGBFh/suaXoY/xiddfNwwlHUvDGDhjlmqIU/uyNAayk21wfSoBThsNZ4GLFXyl5AV7+3iS5KIDHAALcPeqDcai14AwHzSwSvWcN2yMBJ8gGBRIJ/aRCWSl4g831rZduDGsM/1CSudafEmVk=";
+"E164.arpa." 257 3 5 "AwEAAcE3FPbL5MgxBor1/ieIrXhHNBnjiaafdBVgtdy5V5qRbRkk4D1ZgBX/ggfwriY7G2b1OL7ZKeHyZk8nt/x8Zaw++uBk7y+C0El6ZEos+AIsacz/lYCDiX9yZbwI1h6q+1EoXmdNfzxu+wbiDLILMrKoedvtc7XeLMz49nfmCsy+FDWVAGQuLae4sDmYmxDyBGGfmNCZrnhmzaVjeNtfM8qt0oZvyRlScCHosrbH3k9shoGUXcKoZykTTMJOjPt9Xkqzk6u1Vqj4bQaN5F2yMtlVDPvhwO3KUF7w1k+iEA865WrZiMvDtmRVV7SXa8bbvPNZJ6ZhezzVqHs0P6kjIR0=";
+
+
