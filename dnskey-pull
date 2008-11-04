@@ -1,0 +1,157 @@
+#!/usr/bin/python
+#
+# (C)opyright Xelerance 2007 2008, Paul Wouters <paul@xelerance.com>
+
+import commands
+import re
+import base64
+import os
+import sys
+import getopt
+
+try:
+	import dns.resolver
+except:
+	print "dnskey-pull requires the python-dns package from http://www.pythondns.org/"
+	print "Fedora: yum install python-dns"
+	print "Debian: apt-get install python-dnspython   (NOT python-dns!)"
+	sys.exit()
+
+def usage():
+	print "dnskey-pull: Pull DNSKEY records of Key Signing Keys for resolver priming"
+	print "usage: dnskey-pull [-b|-u] [-a] [-t] [-o output] [-s <ns>] zone [ zone ...]"
+	print "examples:"
+	print "          dnskey-pull -a -b -s f.root-servers.net . arpa" 
+	print "          dnskey-pull -a -u -s ns-pri.ripe.net. e164.arpa ." 
+	print "          dnskey-pull -u xelerance.com"
+        
+	print "          -b = output bind syntax"
+	print "          -u = output unbound syntax"
+	print "          -a = use AXFR to find all NS/DNSKEY records in a zone"
+	print "          -t = Add the 'trusted-keys' wrapper around the keys found"
+	print "If no nameserver is specified, the system resolver is used for AXFR."
+	print "The system resolver is always used for DNSKEY queries." 
+
+def main(argv=None):
+	if argv is None:
+		argv = sys.argv
+	try:
+		opts, args = getopt.getopt(argv[1:], "tavhbuo:s:", ["trusted","axfr", "version","help","bind","unbound","output:","server:"])
+	except getopt.error, msg:
+		#print >>sys.stderr, err.msg
+		print >>sys.stderr, "ERROR parsing options"
+		usage()
+		sys.exit(2)
+
+	# parse options
+	trusted = 0
+	axfr = 0
+	ns = ""
+	zone = ""
+	bind = 0
+	unbound = 0
+	output = ""
+	for o, a in opts:
+		if o in ("-v", "--version"):
+			print "dnskey-pull version 0.1 "
+			print "Author:\n Paul Wouters <paul@xelerance.com>"
+			print "Source : http://www.xelerance.com/software/dnssec-keys/"
+			sys.exit()
+		if o in ("-h", "--help"):
+			usage()
+			sys.exit()
+
+		if o in ("-t","--trusted"):
+			trusted = 1
+		if o in ("-a","--axfr"):
+			axfr = 1
+		if o in ("-b","--bind"):
+			bind = 1
+		if o in ("-u","--unbound"):
+			unbound = 1
+		if o in ("-o","--output"):
+			if not a:
+				print "error: no output file specified for -o"
+				usage()
+				sys.exit()
+			else:
+				output = a;
+		if o in ("-s","--server"):
+			if not a:
+				print "error: no server specified for -s"
+				usage()
+				sys.exit()
+			else:
+				ns = a;
+
+	if not args:
+		usage()
+		sys.exit()
+
+	if trusted:
+		print "trusted-keys {"
+
+	for zone in args:
+		# fix dots, eg ".arpa" and "arpa" to "arpa."
+		if zone != ".":
+			if zone[-1] != ".":
+				zone = zone + "."
+			if zone[0] == ".":
+				zone = zone[1:]
+			#print "Processing %s"%zone
+		if axfr:
+			getkeys(zone,ns,bind,unbound)
+		else:
+			getkey(zone,ns,bind,unbound)
+	if trusted:
+		print "};"
+
+def NSonly(x): return "IN\tNS" in x
+
+def getkey(zone,ns,bind,unbound):
+	# we're not using axfr, so we can only attempt DNSKEY's for the APEX
+	res = dns.resolver.Resolver()
+	res.use_edns(1, 0, 1400)
+	try:
+		answers = res.query(zone,'DNSKEY')
+		for rdata in answers.rrset:
+			if rdata.flags == 257:
+				print '"%s" %s %s %s "%s";'%(zone, rdata.flags,
+					rdata.protocol, rdata.algorithm,
+					base64.b64encode(rdata.key) )
+	except:
+		#print "NO DNSKEY for %s"%zone
+		pass
+
+def getkeys(zone,ns,bind,unbound):
+	# no axfr support in python-dns yet
+	cmd = "host -t axfr %s %s"%(zone,ns)
+	rawdomainList = filter(NSonly, commands.getoutput(cmd).splitlines() )
+	domainList = []
+	for zone in rawdomainList:
+		zone = zone.split("\t",1)[0]
+		if not zone in domainList:
+			domainList.append(zone)
+	
+	#print "Attempting to find DNSKEY's for %s zones"% len(domainList)
+
+	# initialise resolver object - this does not use specified NS, because
+	# that one might not be a public open resolver.
+	res = dns.resolver.Resolver()
+	res.use_edns(1, 0, 1400)
+
+	for zone in domainList:
+		try:
+			answers = res.query(zone,'DNSKEY')
+			for rdata in answers.rrset:
+				if rdata.flags == 257:
+					print "%s %s %s %s '%s';"%(zone, rdata.flags,
+						rdata.protocol, rdata.algorithm,
+						base64.b64encode(rdata.key) )
+		except:
+			#print "NO DNSKEY for %s"%zone
+			pass
+
+if __name__ == "__main__":
+	sys.exit(main())
+
