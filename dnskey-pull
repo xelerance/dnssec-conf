@@ -8,6 +8,14 @@ import base64
 import os
 import sys
 import getopt
+import datetime
+import encodings.punycode
+import codecs
+
+global outputfp
+outputfp = 0
+
+errors = ""
 
 try:
 	import dns.resolver
@@ -50,7 +58,7 @@ def main(argv=None):
 	zone = ""
 	bind = 0
 	unbound = 0
-	output = ""
+	global outputfp
 	for o, a in opts:
 		if o in ("-v", "--version"):
 			print "dnskey-pull version 0.1 "
@@ -75,7 +83,13 @@ def main(argv=None):
 				usage()
 				sys.exit()
 			else:
-				output = a;
+				try:
+					outputfp = open(a,"w")
+					outputfp.write("//; %s\n//; %s\n"%(" ".join(argv), re.sub(":[^:]*$","", str(datetime.datetime.today()))))
+				except IOError:
+					print "error writing file %s"%a
+					sys.exit()
+				
 		if o in ("-s","--server"):
 			if not a:
 				print "error: no server specified for -s"
@@ -89,7 +103,10 @@ def main(argv=None):
 		sys.exit()
 
 	if trusted:
-		print "trusted-keys {"
+		if outputfp:
+			outputfp.write("trusted-keys {\n\n")
+		else:
+			print "trusted-keys {"
 
 	for zone in args:
 		# fix dots, eg ".arpa" and "arpa" to "arpa."
@@ -104,26 +121,48 @@ def main(argv=None):
 		else:
 			getkey(zone,ns,bind,unbound)
 	if trusted:
-		print "};"
+		if outputfp:
+			outputfp.write("};\n\n")
+			outputfp.close()
+		else:
+			print "};"
 
 def NSonly(x): return "IN\tNS" in x
 
 def getkey(zone,ns,bind,unbound):
+	global outputfp
 	# we're not using axfr, so we can only attempt DNSKEY's for the APEX
 	res = dns.resolver.Resolver()
 	res.use_edns(1, 0, 1400)
+	answers = ""
 	try:
 		answers = res.query(zone,'DNSKEY')
-		for rdata in answers.rrset:
-			if rdata.flags == 257:
-				print '"%s" %s %s %s "%s";'%(zone, rdata.flags,
-					rdata.protocol, rdata.algorithm,
-					base64.b64encode(rdata.key) )
 	except:
 		#print "NO DNSKEY for %s"%zone
 		pass
 
+	if answers:
+		if zone.lower()[0:4] == "xn--":
+			errors = ""
+			puny = "//; %s"% encodings.punycode.punycode_decode(zone[4:],errors)
+			if outputfp:
+				outputfp.write(puny)
+			else:
+				print puny
+		for rdata in answers.rrset:
+			if rdata.flags == 257:
+				msg =  '"%s" %s %s %s "%s";'%(zone, rdata.flags,
+					rdata.protocol, rdata.algorithm,
+					base64.b64encode(rdata.key) )
+				if outputfp:
+					outputfp.write(msg)
+				else:
+					print msg
+		if outputfp:
+			outputfp.write("\n")
+
 def getkeys(zone,ns,bind,unbound):
+	global outputfp
 	# no axfr support in python-dns yet
 	cmd = "host -t axfr %s %s"%(zone,ns)
 	rawdomainList = filter(NSonly, commands.getoutput(cmd).splitlines() )
@@ -139,18 +178,33 @@ def getkeys(zone,ns,bind,unbound):
 	# that one might not be a public open resolver.
 	res = dns.resolver.Resolver()
 	res.use_edns(1, 0, 1400)
-
 	for zone in domainList:
+		answers = 0
 		try:
 			answers = res.query(zone,'DNSKEY')
-			for rdata in answers.rrset:
-				if rdata.flags == 257:
-					print "%s %s %s %s '%s';"%(zone, rdata.flags,
-						rdata.protocol, rdata.algorithm,
-						base64.b64encode(rdata.key) )
 		except:
 			#print "NO DNSKEY for %s"%zone
 			pass
+		if answers:
+			if zone.lower()[0:4] == "xn--":
+				errors = ""
+				puny = "//; %s"% encodings.punycode.punycode_decode(zone[4:],errors)
+				if outputfp:
+					outputfp.write(puny)
+				else:
+					print puny
+			for rdata in answers.rrset:
+				if rdata.flags == 257:
+					msg =  '"%s" %s %s %s "%s";'%(zone, rdata.flags,
+						rdata.protocol, rdata.algorithm,
+						base64.b64encode(rdata.key) )
+					if outputfp:
+						outputfp.write(msg)
+					else:
+						print msg
+				if outputfp:
+					outputfp.write("\n")
+
 
 if __name__ == "__main__":
 	sys.exit(main())
