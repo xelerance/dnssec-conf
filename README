@@ -28,5 +28,30 @@
 # IDN test domains were harvested
 # See http://www.icann.org/en/announcements/announcement-2-19jun07.htm
 #
+# dlv.isc.org
 # ISC DLV Registry
 # See https://secure.isc.org/index.pl?/ops/dlv/index.php
+#
+# Museum .museum
+# http://about.museum/ is the NIC, no key URL known
+#
+# Puerto Rico .pr
+# See http://dnssec.nic.pr/keys/nic.pr.zip
+# Their website information does not list teir KSK, only their ZSK.
+# We configure to use the KSK.
+#
+# Bulgaria .bg
+# https://www.register.bg/user/ has some information, but no key url known
+#
+# Sweden .se
+# http://www.iis.se/domains/sednssec/publickey
+#
+# Brasil .br
+# https://registro.br/ksk/index.html
+# (displays badly in some browsers)
+#
+# Czech Republic .cz
+# http://www.nic.cz/dnssec/
+#
+# The Root zone (test)
+# 
