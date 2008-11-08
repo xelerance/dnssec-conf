@@ -141,7 +141,6 @@ def getkey(zone,ns):
 				outputfp.write(puny)
 			else:
 				print puny
-		print "got some"
 		for rdata in answers.rrset:
 			if rdata.flags == 257:
 				msg =  '"%s" %s %s %s "%s";'%(zone, rdata.flags,
