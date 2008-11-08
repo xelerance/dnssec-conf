@@ -27,14 +27,12 @@ except:
 
 def usage():
 	print "dnskey-pull: Pull DNSKEY records of Key Signing Keys for resolver priming"
-	print "usage: dnskey-pull [-b|-u] [-a] [-t] [-o output] [-s <ns>] zone [ zone ...]"
+	print "usage: dnskey-pull [-a] [-t] [-o output] [-s <ns>] zone [ zone ...]"
 	print "examples:"
-	print "          dnskey-pull -a -b -s f.root-servers.net . arpa" 
-	print "          dnskey-pull -a -u -s ns-pri.ripe.net. e164.arpa ." 
-	print "          dnskey-pull -u xelerance.com"
+	print "          dnskey-pull -a -s f.root-servers.net . arpa" 
+	print "          dnskey-pull -a -s ns-pri.ripe.net. e164.arpa ." 
+	print "          dnskey-pull xelerance.com"
         
-	print "          -b = output bind syntax"
-	print "          -u = output unbound syntax"
 	print "          -a = use AXFR to find all NS/DNSKEY records in a zone"
 	print "          -t = Add the 'trusted-keys' wrapper around the keys found"
 	print "If no nameserver is specified, the system resolver is used for AXFR."
@@ -44,7 +42,7 @@ def main(argv=None):
 	if argv is None:
 		argv = sys.argv
 	try:
-		opts, args = getopt.getopt(argv[1:], "tavhbuo:s:", ["trusted","axfr", "version","help","bind","unbound","output:","server:"])
+		opts, args = getopt.getopt(argv[1:], "tavho:s:", ["trusted","axfr", "version","help","output:","server:"])
 	except getopt.error, msg:
 		#print >>sys.stderr, err.msg
 		print >>sys.stderr, "ERROR parsing options"
@@ -56,8 +54,6 @@ def main(argv=None):
 	axfr = 0
 	ns = ""
 	zone = ""
-	bind = 0
-	unbound = 0
 	global outputfp
 	for o, a in opts:
 		if o in ("-v", "--version"):
@@ -73,10 +69,6 @@ def main(argv=None):
 			trusted = 1
 		if o in ("-a","--axfr"):
 			axfr = 1
-		if o in ("-b","--bind"):
-			bind = 1
-		if o in ("-u","--unbound"):
-			unbound = 1
 		if o in ("-o","--output"):
 			if not a:
 				print "error: no output file specified for -o"
