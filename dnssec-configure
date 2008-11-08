@@ -1,0 +1,3 @@
+#!/usr/bin/python
+
+print "this will rewrite unbound or named based on fedora/rhel configs"
