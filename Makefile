@@ -1,8 +1,9 @@
 # A bit overkill, but rpm does not like redirecting output?
 #
 
-DESTDIR?=/usr/local/
-MANDIR=?=/usr/local/man/
+DESTDIR?=/usr/local
+
+MANDIR?=/usr/local/man
 
 all:	production.conf testing.conf
 
