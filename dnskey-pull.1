@@ -1,0 +1,81 @@
+.TH DNSKEY-PULL 1 "7 November 2008" "" "User's Manual"
+
+.SH NAME
+dnskey-pull -- fetch DNSKEY records from a zone or from all sub-zones
+
+.SH SYNOPSIS
+.B dnskey-pull
+.RB [ \-a ]
+.RB [ \-t ]
+.RB [ \-o 
+.IR <output> ]
+.RB [ \-s 
+.IR <ns> ]
+.IR " zone "  [...] "
+.SH DESCRIPTION
+.B dnskey-pull
+obtains Key-Signing-Key (KSK) DNSKEY records for use as
+.I trust-anchor
+with recursing nameserver that are setup to use
+.B DNSSEC.
+.PP
+dnskey-pull itself performs
+no DNSSEC validation. dnskey-pull pulls KSK DNSKEY records for a single
+zone but can also be told, if it has
+.I zone-transfer
+(AXFR) permission, to lookup KSK DNSKEY records for all NS records found
+in a zone. This latter feature can be used to find new DNSKEY's in TLD's.
+.PP
+The output of this command can be directly included in the configuration
+files for the 
+.B Bind
+and
+.B Unbound
+recursing nameservers as DNSSEC trust anchor.
+.PP
+dnskey-pull ignores the system's
+.IR /etc/resolv.conf
+setting for domain appending, and treats all zone arguments as FQDN.
+It does use the system's resolver settings for recursive lookups.
+
+.SH OPTIONS
+.IP \fB\-a\fn
+Use a zone-transfer (AXFR) to find all NS records in a zone and return any
+DNSKEY records found for these NS records in
+.I trusted-key
+format. Note that AXFR is often blocked on nameservers.
+.IP \fB\-s\ <\fInameserver>\fn 
+Use the specified nameserver to perform the zone-transfer (AXFR).
+.IP \fB\-t\fn
+Return the resulting DNSKEY's within a
+.I trusted-key { };
+statement, compatible for including with a
+.I bind
+or
+.I unbound
+nameserver configuration.
+.SH EXAMPLES
+Get all DNSKEY records for Top Level Domains (TLD's) in the Root (".") zone,
+using the F root-server that allows zone-transfers:
+.PP
+.B % dnskey-pull \-t \-a \-s f.root-servers.net .
+.PP
+Get a trusted-key statement for the xelerance.com zone:
+.PP
+.B % dnskey-pull -t xelerance.com
+.PP
+Get the trusted keys for the TLD's of Sweden, Brasil and Bulgaria:
+.PP
+.B % dnskey-pull se. br. bg.
+.PP
+Find all secured
+.I ENUM
+zones:
+.PP
+.B % dnskey-pull -a -s ns-pri.ripe.net. e164.arpa.
+.SH SEE ALSO
+.IR dnssec-conf (1),
+.IR named.conf (8),
+.IR unbound.conf (8).
+.SH AUTHOR
+Paul Wouters <paul@xelerance.com>
