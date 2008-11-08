@@ -109,9 +109,9 @@ def main(argv=None):
 				zone = zone[1:]
 			#print "Processing %s"%zone
 		if axfr:
-			getkeys(zone,ns,bind,unbound)
+			getkeys(zone,ns)
 		else:
-			getkey(zone,ns,bind,unbound)
+			getkey(zone,ns)
 	if trusted:
 		if outputfp:
 			outputfp.write("};\n\n")
@@ -121,7 +121,7 @@ def main(argv=None):
 
 def NSonly(x): return "IN\tNS" in x
 
-def getkey(zone,ns,bind,unbound):
+def getkey(zone,ns):
 	global outputfp
 	# we're not using axfr, so we can only attempt DNSKEY's for the APEX
 	res = dns.resolver.Resolver()
@@ -154,7 +154,7 @@ def getkey(zone,ns,bind,unbound):
 		if outputfp:
 			outputfp.write("\n")
 
-def getkeys(zone,ns,bind,unbound):
+def getkeys(zone,ns):
 	global outputfp
 	# no axfr support in python-dns yet
 	cmd = "host -t axfr %s %s"%(zone,ns)

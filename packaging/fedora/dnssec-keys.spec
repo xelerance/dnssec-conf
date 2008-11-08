@@ -8,6 +8,7 @@ Source: %{name}-%{version}.tar.gz
 Group: System Environment/Daemons
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch: noarch
+Requires: python-dns
 #Requires: a caching nameserver
 
 %description
@@ -25,12 +26,9 @@ make
 
 %install
 rm -rf ${RPM_BUILD_ROOT}
-cp production.conf ${RPM_BUILD_ROOT}%{_sysconfdir/pki/%{name}/production.conf
-install -d ${RPM_BUILD_ROOT}%{_sysconfdir}/pki/%{name}/
-cp production.conf ${RPM_BUILD_ROOT}%{_sysconfdir/pki/%{name}/production.conf
-install -m644 production.conf ${RPM_BUILD_ROOT}%{_sysconfdir/pki/%{name}/production.conf
-install -m644 testing.conf ${RPM_BUILD_ROOT}%{_sysconfdir/pki/%{name}/testing.conf
-cp production.conf ${RPM_BUILD_ROOT}%{_sysconfdir/pki/%{name}/production.conf
+install -p -D -m644 dnskey-pull ${RPM_BUILD_ROOT}%{_bindir}/dnskey-pull
+install -p -D -m644 production.conf ${RPM_BUILD_ROOT}%{_sysconfdir}/pki/%{name}/production.conf
+install -p -D -m644 testing.conf ${RPM_BUILD_ROOT}%{_sysconfdir}/pki/%{name}/testing.conf
 
 %clean
 rm -rf ${RPM_BUILD_ROOT}
@@ -38,9 +36,9 @@ rm -rf ${RPM_BUILD_ROOT}
 %files 
 %defattr(-,root,root)
 %doc LICENSE 
-%attr(0644,root,root) %dir %{_sysconfdir}/pki/%{name}
+%attr(0744,root,root) %dir %{_sysconfdir}/pki/%{name}
 %attr(0644,root,root) %config %{_sysconfdir}/pki/%{name}/*.conf
-%attr(0644,root,root) %config %{_sysconfdir}/BOGUS
+%{_bindir}/dnskey-pull
 
 %changelog
 * Fri Nov  7 2008 Paul Wouters <paul@xelerance.com> 1.01-1 -
