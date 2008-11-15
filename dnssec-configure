@@ -1,3 +1,175 @@
 #!/usr/bin/python
+#
+# (C)opyright Xelerance 2007 2008, Paul Wouters <paul@xelerance.com>
 
-print "this will rewrite unbound or named based on fedora/rhel configs"
+import commands
+import re
+import os
+import sys
+import getopt
+
+def usage():
+	print "dnssec-configure: (re)configure the Bind and/or Unbound nameserver for DNSSEC and DLV"
+	print "usage: dnssec-configure [-u] [-b] [--dnssec <on|off>] --dlv <off| on [dlvzone]>"
+	print "                        [--production] [--testing] [--harvest] [--root]"
+	print "examples:"
+	print "          dnssec-configure -u -b --dnssec on --dlv dlv.isc.org --production"
+	print "          dnsec-configure --dnssec on -dlv on"
+	print "          dnssec-configure --dnssec off -dlv off"
+        
+	print "          -b or -n                 = (re)configure the Bind nameserver (default yes if found)"
+	print "          -u                       = (re)configure the Unbound nameserver (default yes if found)"
+	print "          --dnssec <on|of>          = enable or disable DNSSEC"
+	print "          --dlv <off|on|dlvname>    = enable or disable DLV (default dlv as specified with 'on' is dlv.isc.org)" 
+	print "          --basedir                = basedir for key files, default is /etc/pki/dnssec-keys/"
+	print "          --production             = load production keys into configuration (default yes)"
+	print "          --testing                = load testing keys into configuration (default no)"
+	print "          --harvest                = load harvest keys into configuration (default no)"
+	print "          --root                   = load root key into configuration [not yet implemented]"
+
+def main(argv=None):
+	if argv is None:
+		argv = sys.argv
+	try:
+		opts, args = getopt.getopt(argv[1:], "bnuvh", ["bind","named", "unbound", "version","help","dnssec:","--dlv:","basedir:","--production","testing","harvest","root"])
+	except getopt.error, msg:
+		#print >>sys.stderr, err.msg
+		print >>sys.stderr, "ERROR parsing options"
+		usage()
+		sys.exit(2)
+
+	# parse options
+	dlvzone = "dlv.isc.org"
+	basedir = "/etc/pki/dnssec-keys/"
+	bind = 0
+	unbound = 0
+	dnssec = -1
+	dlv = -1
+	production = ""
+	testing = ""
+	harvest = ""
+	root = ""
+	hack = 0
+	for o, a in opts:
+		hack = 1
+		if o in ("-v", "--version"):
+			print "dnssec-configure version 0.1 "
+			print "Author:\n Paul Wouters <paul@xelerance.com>"
+			print "Source : http://www.xelerance.com/software/dnssec-keys/"
+			sys.exit()
+		if o in ("-h", "--help"):
+			usage()
+			sys.exit()
+
+		if o in ("-n","--named","-b","--bind"):
+			print "Would rewrite Bind nameserver configuration"
+		if o in ("-u","--unbound"):
+			print "Would rewrite Unbound nameserver configuration"
+		if o in ("--basedir"):
+			if not a:
+				print "error: basedir requires argument"
+				usage()
+				sys.exit()
+			else:
+				basedir = a
+		if o in ("--production"):
+			print "GOT PROD"
+			production = 1
+		if o in ("--testing"):
+			testing = 1
+		if o in ("--harvest"):
+			harvest = 1
+		if o in ("--root"):
+			root = 1
+
+		if o in ("--dnssec"):
+			if not a:
+				print "error: no dnssec mode specified"
+				usage()
+				sys.exit()
+			else:
+				if a == "on":
+					dnssec = 1
+				elif a == "off":
+					dnssec = 0
+				else:
+					print "error: dnssec can only be 'on' or 'off'"
+					usage()
+					sys.exit()
+		if o in ("--dlv"):
+			if not a:
+				print "error: no dlv mode specified"
+				usage()
+				sys.exit()
+			else:
+				if a == "on":
+					print "GOT DLV"
+					dlv = 1
+				elif a == "off":
+					dlv = 0
+				else:
+					print "dlvzone set to %s"%a
+					dlvzone = a
+		if not bind and not unbound:
+			# nothing specified, default is both
+			bind = 1
+			unbound = 1
+		if dlv == -1:
+			print "error: dlv setting not specified"
+			usage()
+			sys.exit()
+		if dnssec == -1:
+			print "error: dnssec setting not specified"
+			usage()
+			sys.exit()
+
+	if not hack:
+		usage()
+		sys.exit()
+
+	if args:
+		print "error:unknown arguments specified"
+		usage()
+		sys.exit()
+
+	software = []
+	if bind:
+		software.append("bind")
+	if unbound:
+		software.append("unbound")
+	software = ",".join(software)
+
+	if dnssec:
+		# create conffiles string to include
+		conffiles = ""
+		if production: conffiles = conffiles + basedir + "/production.conf"
+		if testing: conffiles = conffiles + basedir + "/testing.conf"
+		if harvest: conffiles = conffiles + basedir + "/harvest.conf"
+		if root: conffiles = conffiles + basedir + "/root.conf"
+		if not dlv:
+			dlvzone = ""
+		print "Enabling DNSSEC for:%s"%software
+		if bind:
+			BindEnableDNSSEC(dlvzone,conffiles)
+		if unbound:
+			UnoundEnableDNSSEC(dlvzone,conffiles)
+	else:
+		print "Disabling DNSSEC for:%s"%software
+		if bind:
+			BindDisableDNSSEC(dlvzone)
+		if unbound:
+			UnoundDisableDNSSEC(dlvzone)
+
+def BindEnableDNSSEC(dlvzone):
+	print "not yet implemented"
+def BindDisableDNSSEC(dlvzone):
+	print "not yet implemented"
+def UnboundEnableDNSSEC(dlvzone):
+	print "not yet implemented"
+def UnboundDisableDNSSEC(dlvzone):
+	print "not yet implemented"
+
+if __name__ == "__main__":
+	sys.exit(main())
+
+
