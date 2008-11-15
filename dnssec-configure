@@ -191,15 +191,19 @@ def UnboundDisableDNSSEC(dlvzone):
 # DLV rewrite functions
 def enableDLVBind(dlvzone):
 	print "Enable DLV %s for Bind: not yet implemented"%dlvzone
+	print commands.getoutput("/sbin/service named try-restart")
 
 def enableDLVUnbound(dlvzone):
 	print "Enable DLV %s for Unbund: not yet implemented"%dlvzone
+	print commands.getoutput("/sbin/service unbound try-restart")
 
 def disableDLVBind():
 	print "Disable DLV for Bind: not yet implemented"
+	print commands.getoutput("/sbin/service named try-restart")
 
 def disableDLVUnbound():
 	print "Disable DLV for Unbund: not yet implemented"
+	print commands.getoutput("/sbin/service unbound try-restart")
 
 
 if __name__ == "__main__":
