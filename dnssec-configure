@@ -28,6 +28,9 @@ def usage():
 	print "          --root                   = load root key into configuration [not yet implemented]"
 
 def main(argv=None):
+	if commands.getoutput( "whoami" ) != "root":
+		sys.exit( "Must be root!" )
+
 	if argv is None:
 		argv = sys.argv
 	try:
