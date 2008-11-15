@@ -10,12 +10,12 @@ import getopt
 
 def usage():
 	print "dnssec-configure: (re)configure the Bind and/or Unbound nameserver for DNSSEC and DLV"
-	print "usage: dnssec-configure [-u] [-b] [--dnssec <on|off>] --dlv <off| on [dlvzone]>"
+	print "usage: dnssec-configure [-u] [-b] [--dnssec= <on|off>] --dlv= <off| on [dlvzone]>"
 	print "                        [--production] [--testing] [--harvest] [--root]"
 	print "examples:"
-	print "          dnssec-configure -u -b --dnssec on --dlv dlv.isc.org --production"
-	print "          dnsec-configure --dnssec on -dlv on"
-	print "          dnssec-configure --dnssec off -dlv off"
+	print "          dnssec-configure -u -b --dnssec=on --dlv=dlv.isc.org --production"
+	print "          dnsec-configure --dnssec=on -dlv=on --production --testing --harvest"
+	print "          dnssec-configure --dnssec=off -dlv=off"
         
 	print "          -b or -n                 = (re)configure the Bind nameserver (default yes if found)"
 	print "          -u                       = (re)configure the Unbound nameserver (default yes if found)"
@@ -31,7 +31,7 @@ def main(argv=None):
 	if argv is None:
 		argv = sys.argv
 	try:
-		opts, args = getopt.getopt(argv[1:], "bnuvh", ["bind","named", "unbound", "version","help","dnssec:","--dlv:","basedir:","--production","testing","harvest","root"])
+		opts, args = getopt.getopt(argv[1:], "bnuvh1:2:3:4567", ["bind","named", "unbound", "version","help","dnssec=","dlv=","basedir=","production","testing","harvest","root"])
 	except getopt.error, msg:
 		#print >>sys.stderr, err.msg
 		print >>sys.stderr, "ERROR parsing options"
@@ -62,10 +62,10 @@ def main(argv=None):
 			sys.exit()
 
 		if o in ("-n","--named","-b","--bind"):
-			print "Would rewrite Bind nameserver configuration"
+			bind = 1
 		if o in ("-u","--unbound"):
-			print "Would rewrite Unbound nameserver configuration"
-		if o in ("--basedir"):
+			unbound = 1
+		if o in ("-3","--basedir"):
 			if not a:
 				print "error: basedir requires argument"
 				usage()
@@ -73,7 +73,6 @@ def main(argv=None):
 			else:
 				basedir = a
 		if o in ("--production"):
-			print "GOT PROD"
 			production = 1
 		if o in ("--testing"):
 			testing = 1
@@ -82,7 +81,7 @@ def main(argv=None):
 		if o in ("--root"):
 			root = 1
 
-		if o in ("--dnssec"):
+		if o in ("-1","--dnssec"):
 			if not a:
 				print "error: no dnssec mode specified"
 				usage()
@@ -96,32 +95,32 @@ def main(argv=None):
 					print "error: dnssec can only be 'on' or 'off'"
 					usage()
 					sys.exit()
-		if o in ("--dlv"):
+		if o in ("-2","--dlv"):
 			if not a:
 				print "error: no dlv mode specified"
 				usage()
 				sys.exit()
 			else:
 				if a == "on":
-					print "GOT DLV"
 					dlv = 1
 				elif a == "off":
 					dlv = 0
 				else:
+					dlv = 1
 					print "dlvzone set to %s"%a
 					dlvzone = a
-		if not bind and not unbound:
-			# nothing specified, default is both
-			bind = 1
-			unbound = 1
-		if dlv == -1:
-			print "error: dlv setting not specified"
-			usage()
-			sys.exit()
-		if dnssec == -1:
-			print "error: dnssec setting not specified"
-			usage()
-			sys.exit()
+	if not bind and not unbound:
+		# nothing specified, default is both
+		bind = 1
+		unbound = 1
+	if dlv == -1:
+		print "error: dlv setting not specified"
+		usage()
+		sys.exit()
+	if dnssec == -1:
+		print "error: dnssec setting not specified"
+		usage()
+		sys.exit()
 
 	if not hack:
 		usage()
@@ -148,26 +147,60 @@ def main(argv=None):
 		if root: conffiles = conffiles + basedir + "/root.conf"
 		if not dlv:
 			dlvzone = ""
-		print "Enabling DNSSEC for:%s"%software
+		else:
+			# fix dots, eg ".arpa" and "arpa" to "arpa."
+			if dlvzone != ".":
+				if dlvzone[-1] != ".":
+					dlvzone = dlvzone + "."
+				if dlvzone[0] == ".":
+					dlvzone = dlvzone[1:]
+
+		print "Enabling DNSSEC for: %s\n"%software
 		if bind:
 			BindEnableDNSSEC(dlvzone,conffiles)
 		if unbound:
-			UnoundEnableDNSSEC(dlvzone,conffiles)
+			UnboundEnableDNSSEC(dlvzone,conffiles)
 	else:
-		print "Disabling DNSSEC for:%s"%software
+		print "Disabling DNSSEC for: %s\n"%software
 		if bind:
 			BindDisableDNSSEC(dlvzone)
 		if unbound:
-			UnoundDisableDNSSEC(dlvzone)
+			UnboundDisableDNSSEC(dlvzone)
 
-def BindEnableDNSSEC(dlvzone):
-	print "not yet implemented"
+# DNSSEC rewrite functions
+def BindEnableDNSSEC(dlvzone,conffiles):
+	if dlvzone:
+		enableDLVBind(dlvzone)
+	else:
+		disableDLVBind()
+	print "Enable DNSSEC for Bind(%s): not yet implemented"%conffiles
+
 def BindDisableDNSSEC(dlvzone):
 	print "not yet implemented"
-def UnboundEnableDNSSEC(dlvzone):
-	print "not yet implemented"
+
+def UnboundEnableDNSSEC(dlvzone,conffiles):
+	if dlvzone:
+		enableDLVBound(dlvzone)
+	else:
+		disableDLVUnbound()
+	print "Enable DNSSEC for Unbound(%s): not yet implemented"%conffiles
+
 def UnboundDisableDNSSEC(dlvzone):
-	print "not yet implemented"
+	print "Disable DNSSEC for Unbound: not yet implemented"
+
+# DLV rewrite functions
+def enableDLVBind(dlvzone):
+	print "Enable DLV %s for Bind: not yet implemented"%dlvzone
+
+def enableDLVUnbound(dlvzone):
+	print "Enable DLV %s for Unbund: not yet implemented"%dlvzone
+
+def disableDLVBind():
+	print "Disable DLV for Bind: not yet implemented"
+
+def disableDLVUnbound():
+	print "Disable DLV for Unbund: not yet implemented"
+
 
 if __name__ == "__main__":
 	sys.exit(main())
