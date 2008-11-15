@@ -5,7 +5,15 @@ DESTDIR?=/usr/local
 
 MANDIR?=/usr/local/man
 
-all:	production.conf testing.conf harvest.conf
+all:	production.conf testing.conf harvest.conf manpages
+
+manpages: dnskey-pull.1 dnssec-configure.1
+
+dnskey-pull.1:
+	xmlto man dnskey-pull.1.xml
+
+dnssec-configure.1:
+	xmlto man dnssec-configure.1.xml
 
 production.conf:
 	cat production/*.conf > production.conf
@@ -16,8 +24,11 @@ testing.conf:
 harvest.conf:
 	cat harvest/*.conf > harvest.conf
 
+cleanall:
+	rm -f production.conf testing.conf harvest.conf harvest/*.conf *.1
+
 clean:
-	rm -f production.conf testing.conf harvest.conf harvest/*.conf
+	rm -f production.conf testing.conf harvest.conf *.1
 
 install:
 	mkdir -p $(DESTDIR)/bin/ $(MANDIR)/man1/
