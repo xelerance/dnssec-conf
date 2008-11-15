@@ -5,7 +5,7 @@ DESTDIR?=/usr/local
 
 MANDIR?=/usr/local/man
 
-all:	production.conf testing.conf
+all:	production.conf testing.conf harvest.conf
 
 production.conf:
 	cat production/*.conf > production.conf
@@ -13,8 +13,11 @@ production.conf:
 testing.conf:
 	cat testing/*.conf > testing.conf
 
+harvest.conf:
+	cat harvest/*.conf > harvest.conf
+
 clean:
-	rm -f production.conf testing.conf harvest/*.conf
+	rm -f production.conf testing.conf harvest.conf harvest/*.conf
 
 install:
 	mkdir -p $(DESTDIR)/bin/ $(MANDIR)/man1/
