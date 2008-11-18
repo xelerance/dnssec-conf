@@ -1,12 +1,18 @@
 #!/usr/bin/python
 #
 # (C)opyright Xelerance 2007 2008, Paul Wouters <paul@xelerance.com>
+#
+# TODO: allow specifying config files and / or prefixes 
 
 import commands
 import re
 import os
 import sys
 import getopt
+global namedconf
+namedconf = "/etc/named.conf"
+global unboundconf 
+unboundconf = "/var/lib/unbound/unbound.conf"
 
 def usage():
 	print "dnssec-configure: (re)configure the Bind and/or Unbound nameserver for DNSSEC and DLV"
@@ -44,6 +50,8 @@ def main(argv=None):
 	# parse options
 	dlvzone = "dlv.isc.org"
 	basedir = "/etc/pki/dnssec-keys/"
+	# Using conf files for 'grep' will cause failure when using
+	# includes, so we need to go through those as well
 	bind = 0
 	unbound = 0
 	dnssec = -1
@@ -170,8 +178,40 @@ def main(argv=None):
 		if unbound:
 			UnboundDisableDNSSEC(dlvzone)
 
+	# we modified the config files, verify and restart (not reload)
+	if bind:
+		checkBindConfig()
+		restartDaemon("bind")
+	if unbound:
+		checkUnboundConfig()
+		restartDaemon("unbound")
+
+def restartDaemon(daemon):
+	(status, output) = commands.getstatusoutput("/sbin/service %s restart"%daemon)
+        if status:
+                print "ERROR:%s"%output
+
+
+def checkUnboundConfig():
+	global unboundconf
+	checkConfig(unboundconf,"unbound-checkconf")
+
+def checkBindConfig():
+	global namedconf
+	checkConfig(namedconf,"named-checkconf")
+
+# check will abort everything if it fails
+def checkConfig(conf, checkprog):
+	if not os.path.isfile(conf):
+		sys.exit("ERROR: %s not found for rewrite")
+	# named-checkconf better be in our path
+	(status, output) = commands.getstatusoutput("%s %s"%(checkprog,conf))
+	if status != 0:
+		sys.exit("ERROR: syntax check for %s %s failed:%s"%(checkprog, conf,output))
+
 # DNSSEC rewrite functions
 def BindEnableDNSSEC(dlvzone,conffiles):
+	checkBindConfig()
 	if dlvzone:
 		enableDLVBind(dlvzone)
 	else:
