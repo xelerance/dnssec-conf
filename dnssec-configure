@@ -144,7 +144,7 @@ def main(argv=None):
 
 	software = []
 	if bind:
-		software.append("named")
+		software.append("bind")
 	if unbound:
 		software.append("unbound")
 	software = ",".join(software)
@@ -181,7 +181,7 @@ def main(argv=None):
 	# we modified the config files, verify and restart (not reload)
 	if bind:
 		checkBindConfig()
-		restartDaemon("bind")
+		restartDaemon("named")
 	if unbound:
 		checkUnboundConfig()
 		restartDaemon("unbound")
