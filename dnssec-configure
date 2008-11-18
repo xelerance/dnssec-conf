@@ -124,10 +124,14 @@ def main(argv=None):
 		# nothing specified, default is both
 		bind = 1
 		unbound = 1
+	if not dnssec:
+		# then also disable dlv
+		dlv = 0
 	if dlv == -1:
 		print "error: dlv setting not specified"
 		usage()
 		sys.exit()
+
 	if dnssec == -1:
 		print "error: dnssec setting not specified"
 		usage()
@@ -219,7 +223,7 @@ def BindEnableDNSSEC(dlvzone,conffiles):
 	print "Enable DNSSEC for Bind(%s): not yet implemented"%conffiles
 
 def BindDisableDNSSEC(dlvzone):
-	print "not yet implemented"
+
 
 def UnboundEnableDNSSEC(dlvzone,conffiles):
 	if dlvzone:
