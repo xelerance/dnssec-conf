@@ -60,9 +60,11 @@ def main(argv=None):
 	testing = ""
 	harvest = ""
 	root = ""
-	hack = 0
+	if not opts:
+		usage()
+		sys.exit()
+		
 	for o, a in opts:
-		hack = 1
 		if o in ("-v", "--version"):
 			print "dnssec-configure version 0.1 "
 			print "Author:\n Paul Wouters <paul@xelerance.com>"
@@ -137,9 +139,6 @@ def main(argv=None):
 		usage()
 		sys.exit()
 
-	if not hack:
-		usage()
-		sys.exit()
 
 	if args:
 		print "error:unknown arguments specified"
@@ -223,7 +222,6 @@ def BindEnableDNSSEC(dlvzone,conffiles):
 	print "Enable DNSSEC for Bind(%s): not yet implemented"%conffiles
 
 def BindDisableDNSSEC(dlvzone):
-
 
 def UnboundEnableDNSSEC(dlvzone,conffiles):
 	if dlvzone:
