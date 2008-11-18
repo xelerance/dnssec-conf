@@ -144,7 +144,7 @@ def main(argv=None):
 
 	software = []
 	if bind:
-		software.append("bind")
+		software.append("named")
 	if unbound:
 		software.append("unbound")
 	software = ",".join(software)
