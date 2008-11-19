@@ -35,7 +35,8 @@ def usage():
 
 def main(argv=None):
 	if commands.getoutput( "whoami" ) != "root":
-		sys.exit( "Must be root!" )
+		#sys.exit( "Must be root!" )
+		print "warning: not root, might not be able to write config files"
 
 	if argv is None:
 		argv = sys.argv
@@ -222,6 +223,61 @@ def BindEnableDNSSEC(dlvzone,conffiles):
 	print "Enable DNSSEC for Bind(%s): not yet implemented"%conffiles
 
 def BindDisableDNSSEC(dlvzone):
+	global namedconf
+	fp = open(namedconf)
+	cnf = fp.readlines()
+	fp.close()
+
+	# find options sections. Assumptions for now: options { start on newline
+	# and first }; on a line by itself is the options closing tag
+	print "finding options section..."
+	startopt = 0
+	endopt = 0
+	for index, item in enumerate(cnf):
+        	if re.match("^\s*options\s*{",item):
+			print "Found options line at %s:%s"%(index,item)
+			startopt = index
+			break
+	if not startopt:
+		sys.exit( "not found options sections")
+
+	for index,item in enumerate(cnf[startopt:]):
+		if re.match("^\s*}\s*;\s*\n*$",item):
+			print "Found closing match at %s:%s"%(index+startopt,item)
+			endopt = index
+			break
+	if not endopt:
+		print cnf[14:]
+		sys.exit( "not found options sections")
+
+	optionscfg = cnf[startopt:startopt+endopt+1] 
+	cfgcopy = optionscfg
+	enablefound = 0 
+	validationfound = 0
+	for index,item in enumerate(cfgcopy):
+		# change entry if there
+		if "dnssec-enable" in item:
+			enablefound = 1
+			(head,tail) = item.split("dnssec-enable")
+			optionscfg[index] = head + "dnssec-enable no;\n"
+		if "dnssec-validation" in item:
+			validationfound = 1
+			(head,tail) = item.split("dnssec-validation")
+			optionscfg[index] = head + "dnssec-validation no;\n"
+		if "dnssec-lookaside" in item:
+			optionscfg[index] = "\\\\ %s"%item
+	# add entry for settings
+	if not enablefound:
+		optionscfg = optionscfg[:-1] + ["dnssec-enable no"] + [ "};\n" ]
+	if not validationfound:
+		optionscfg = optionscfg[:-1] + ["dnssec-validation no"] + [ "};\n" ]
+
+	fpnew = open("/tmp/named.conf","w")
+	fpnew.write("".join(cnf[1:startopt]))
+	fpnew.write("".join(optionscfg))
+	fpnew.write("".join(cnf[(startopt+endopt+1):]))
+	fpnew.close()
+	print "wrote /tmp/named.conf"
 
 def UnboundEnableDNSSEC(dlvzone,conffiles):
 	if dlvzone:
