@@ -2,7 +2,11 @@
 #
 # (C)opyright Xelerance 2007 2008, Paul Wouters <paul@xelerance.com>
 #
-# TODO: allow specifying config files and / or prefixes 
+# TODO: allow specifying location of conf files
+# TODO: make work on debian/ubuntu (different way of starting services)
+# TODO: configurable path for /etc/pki/dnssec-keys/
+# TODO: DLV conf for unbound
+# TODO: add the proper production/testing/harvest conf files 
 
 import commands
 import re
@@ -34,9 +38,8 @@ def usage():
 	print "          --root                   = load root key into configuration [not yet implemented]"
 
 def main(argv=None):
-	if commands.getoutput( "whoami" ) != "root":
-		#sys.exit( "Must be root!" )
-		print "warning: not root, might not be able to write config files"
+#	if commands.getoutput( "whoami" ) != "root":
+#		sys.exit("root permission is required  to write config files"
 
 	if argv is None:
 		argv = sys.argv
@@ -121,12 +124,25 @@ def main(argv=None):
 					dlv = 0
 				else:
 					dlv = 1
-					print "dlvzone set to %s"%a
 					dlvzone = a
 	if not bind and not unbound:
 		# nothing specified, default is both
 		bind = 1
 		unbound = 1
+	# check write perms
+	if bind:
+		try:
+			fp = open(namedconf,"a")
+			fp.close()
+		except:
+			sys.exit("error: cannot write %s"%namedconf)
+	if unbound:
+		try:
+			fp = open(unboundconf,"a")
+			fp.close()
+		except:
+			sys.exit("error: cannot write %s"%unboundconf)
+
 	if not dnssec:
 		# then also disable dlv
 		dlv = 0
@@ -172,15 +188,15 @@ def main(argv=None):
 
 		print "Enabling DNSSEC for: %s\n"%software
 		if bind:
-			BindEnableDNSSEC(dlvzone,conffiles)
+			BindEnableDNSSEC(dlvzone)
 		if unbound:
-			UnboundEnableDNSSEC(dlvzone,conffiles)
+			UnboundEnableDNSSEC(dlvzone)
 	else:
 		print "Disabling DNSSEC for: %s\n"%software
 		if bind:
-			BindDisableDNSSEC(dlvzone)
+			BindDisableDNSSEC()
 		if unbound:
-			UnboundDisableDNSSEC(dlvzone)
+			UnboundDisableDNSSEC()
 
 	# we modified the config files, verify and restart (not reload)
 	if bind:
@@ -208,21 +224,21 @@ def checkBindConfig():
 def checkConfig(conf, checkprog):
 	if not os.path.isfile(conf):
 		sys.exit("ERROR: %s not found for rewrite")
-	# named-checkconf better be in our path
+	# *-checkconf better be in our path
 	(status, output) = commands.getstatusoutput("%s %s"%(checkprog,conf))
 	if status != 0:
 		sys.exit("ERROR: syntax check for %s %s failed:%s"%(checkprog, conf,output))
 
 # DNSSEC rewrite functions
-def BindEnableDNSSEC(dlvzone,conffiles):
+def BindEnableDNSSEC(dlvzone):
 	checkBindConfig()
-	if dlvzone:
-		enableDLVBind(dlvzone)
-	else:
-		disableDLVBind()
-	print "Enable DNSSEC for Bind(%s): not yet implemented"%conffiles
+	BindSetDNSSEC("yes",dlvzone)
 
-def BindDisableDNSSEC(dlvzone):
+def BindDisableDNSSEC():
+	checkBindConfig()
+	BindSetDNSSEC("no","")
+
+def BindSetDNSSEC(yesno,dlvzone):
 	global namedconf
 	fp = open(namedconf)
 	cnf = fp.readlines()
@@ -251,26 +267,35 @@ def BindDisableDNSSEC(dlvzone):
 		sys.exit( "not found options sections")
 
 	optionscfg = cnf[startopt:startopt+endopt+1] 
-	cfgcopy = optionscfg
+
 	enablefound = 0 
 	validationfound = 0
-	for index,item in enumerate(cfgcopy):
+	dlvfound = 0
+	for index,item in enumerate(optionscfg):
 		# change entry if there
 		if "dnssec-enable" in item:
 			enablefound = 1
 			(head,tail) = item.split("dnssec-enable")
-			optionscfg[index] = head + "dnssec-enable no;\n"
+			optionscfg[index] = head + "dnssec-enable %s;\n"%yesno
 		if "dnssec-validation" in item:
 			validationfound = 1
 			(head,tail) = item.split("dnssec-validation")
-			optionscfg[index] = head + "dnssec-validation no;\n"
+			optionscfg[index] = head + "dnssec-validation %s;\n"%yesno
 		if "dnssec-lookaside" in item:
-			optionscfg[index] = "\\\\ %s"%item
-	# add entry for settings
+			dlvfound = 1
+			if not dlvzone:
+				optionscfg[index] = "// %s"%item
+			else:
+				(head,tail) = item.split("dnssec-lookaside")
+				optionscfg[index] = head + "dnssec-lookaside . trust-anchor " + dlvzone + ";\n"
+	# add entry for unfound settings
 	if not enablefound:
-		optionscfg = optionscfg[:-1] + ["dnssec-enable no"] + [ "};\n" ]
+		optionscfg = optionscfg[:-1] + ["dnssec-enable %s;\n"%yesno] + [ "];\n" ]
 	if not validationfound:
-		optionscfg = optionscfg[:-1] + ["dnssec-validation no"] + [ "};\n" ]
+		optionscfg = optionscfg[:-1] + ["dnssec-validation %s"%yesno] + [ "};\n" ]
+	if dlvzone and not dlvfound:
+		optionscfg = optionscfg[:-1] + ["dnssec-lookaside . trust-anchor %s"%dlvzone] + [ "};\n" ]
+
 
 	fpnew = open("/tmp/named.conf","w")
 	fpnew.write("".join(cnf[1:startopt]))
@@ -278,33 +303,53 @@ def BindDisableDNSSEC(dlvzone):
 	fpnew.write("".join(cnf[(startopt+endopt+1):]))
 	fpnew.close()
 	print "wrote /tmp/named.conf"
+	# must add trusted-keys sections now.
 
-def UnboundEnableDNSSEC(dlvzone,conffiles):
-	if dlvzone:
-		enableDLVBound(dlvzone)
+def UnboundEnableDNSSEC(dlvzone):
+	UnboundSetDNSSEC("yes",dlvzone)
+
+def UnboundDisableDNSSEC():
+	UnboundSetDNSSEC("no","")
+
+# easiest is to remember is start of server: section
+#val-permissive-mode: yes
+def UnboundSetDNSSEC(yesno,dlvzone):
+	global unboundconf
+	fp = open(unboundconf)
+	cnf = fp.readlines()
+	fp.close()
+	# flip the yesno arround because we say 'yes' to disable dnssec
+	if yesno == "yes":
+		yesno = "no"
 	else:
-		disableDLVUnbound()
-	print "Enable DNSSEC for Unbound(%s): not yet implemented"%conffiles
+		yesno = "yes"
 
-def UnboundDisableDNSSEC(dlvzone):
-	print "Disable DNSSEC for Unbound: not yet implemented"
+	# first try if we find the option, if not add to start of server: section
+	serversect = 0
+	permissive = 0
+	commentpermissive = 0
+	for index, item in enumerate(cnf):
+        	if re.match("^\s*server:\s*",item):
+			print "Found server: line at %s:%s"%(index,item)
+			serversect = index
+        	if re.match("^\s*val-permissive-mode\s*:",item):
+			print "Found val-permissive-mode line at %s:%s"%(index,item)
+			permissive = index
+        	if re.match("^\s*#\s*val-permissive-mode\s*:",item):
+			print "Found #val-permissive-mode line at %s:%s"%(index,item)
+			commentpermissive = index
+	if permissive:
+		(head,tail) = cnf[permissive].split("val-permissive-mode")
+		cnf[permissive] = "%sval-permissive-mode: %s\n"%(head,yesno)
+	elif commentpermissive:
+		(head,tail) = cnf[commentpermissive].split("#",1)
+		cnf[commentpermissive] = "%sval-permissive-mode: %s\n"%(head,yesno)
+	else:
+		cnf = cnf[1:serversect] + [ "   val-permissive-mode: %s"%yesno ] + cnf[serversect:]
 
-# DLV rewrite functions
-def enableDLVBind(dlvzone):
-	print "Enable DLV %s for Bind: not yet implemented"%dlvzone
-	print commands.getoutput("/sbin/service named try-restart")
-
-def enableDLVUnbound(dlvzone):
-	print "Enable DLV %s for Unbund: not yet implemented"%dlvzone
-	print commands.getoutput("/sbin/service unbound try-restart")
-
-def disableDLVBind():
-	print "Disable DLV for Bind: not yet implemented"
-	print commands.getoutput("/sbin/service named try-restart")
-
-def disableDLVUnbound():
-	print "Disable DLV for Unbund: not yet implemented"
-	print commands.getoutput("/sbin/service unbound try-restart")
+	fp = open("/tmp/unbound.conf","w")
+	fp.write("".join(cnf))
+	fp.close()
 
 
 if __name__ == "__main__":
