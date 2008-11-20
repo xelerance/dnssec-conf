@@ -16,7 +16,7 @@ import getopt
 global namedconf
 namedconf = "/etc/named.conf"
 global unboundconf 
-unboundconf = "/var/lib/unbound/unbound.conf"
+unboundconf = "/etc/unbound/unbound.conf"
 
 def usage():
 	print "dnssec-configure: (re)configure the Bind and/or Unbound for DNSSEC and DLV"
@@ -251,7 +251,6 @@ def BindSetDNSSEC(yesno,dlvzone):
 	endopt = 0
 	for index, item in enumerate(cnf):
         	if re.match("^\s*options\s*{",item):
-			print "Found options line at %s:%s"%(index,item)
 			startopt = index
 			break
 	if not startopt:
@@ -259,7 +258,6 @@ def BindSetDNSSEC(yesno,dlvzone):
 
 	for index,item in enumerate(cnf[startopt:]):
 		if re.match("^\s*}\s*;\s*\n*$",item):
-			print "Found closing match at %s:%s"%(index+startopt,item)
 			endopt = index
 			break
 	if not endopt:
@@ -276,26 +274,29 @@ def BindSetDNSSEC(yesno,dlvzone):
 		if "dnssec-enable" in item:
 			enablefound = 1
 			(head,tail) = item.split("dnssec-enable")
-			optionscfg[index] = head + "dnssec-enable %s;\n"%yesno
+			optionscfg[index] = re.sub("#","",head) + "dnssec-enable %s;\n"%yesno
 		if "dnssec-validation" in item:
 			validationfound = 1
 			(head,tail) = item.split("dnssec-validation")
-			optionscfg[index] = head + "dnssec-validation %s;\n"%yesno
+			optionscfg[index] = re.sub("#","",head) + "dnssec-validation %s;\n"%yesno
 		if "dnssec-lookaside" in item:
 			dlvfound = 1
 			if not dlvzone:
 				optionscfg[index] = "// %s"%item
 			else:
 				(head,tail) = item.split("dnssec-lookaside")
-				optionscfg[index] = head + "dnssec-lookaside . trust-anchor " + dlvzone + ";\n"
+				optionscfg[index] = re.sub("#","",head) + "dnssec-lookaside . trust-anchor " + dlvzone + ";\n"
 	# add entry for unfound settings
 	if not enablefound:
 		optionscfg = optionscfg[:-1] + ["dnssec-enable %s;\n"%yesno] + [ "];\n" ]
 	if not validationfound:
 		optionscfg = optionscfg[:-1] + ["dnssec-validation %s"%yesno] + [ "};\n" ]
-	if dlvzone and not dlvfound:
-		optionscfg = optionscfg[:-1] + ["dnssec-lookaside . trust-anchor %s"%dlvzone] + [ "};\n" ]
-
+	if dlvzone:
+		if not dlvfound:
+			optionscfg = optionscfg[:-1] + ["dnssec-lookaside . trust-anchor %s"%dlvzone] + [ "};\n" ]
+		if not os.path.isfile("/etc/pki/dnssec-keys/dlv/%sconf"%dlvzone):
+			print "warning: /etc/pki/dnssec-keys/dlv/%sconf not found. If you trust your network use:"%dlvzone
+			print "         dnskey-pull -t -o /etc/pki/dnssec-keys/dlv/%sconf %s' to obtain it"%(dlvzone,dlvzone)
 
 	fpnew = open("/tmp/named.conf","w")
 	fpnew.write("".join(cnf[1:startopt]))
@@ -328,25 +329,35 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 	serversect = 0
 	permissive = 0
 	commentpermissive = 0
+	dlvanchorfile = 0
 	for index, item in enumerate(cnf):
         	if re.match("^\s*server:\s*",item):
-			print "Found server: line at %s:%s"%(index,item)
 			serversect = index
         	if re.match("^\s*val-permissive-mode\s*:",item):
-			print "Found val-permissive-mode line at %s:%s"%(index,item)
 			permissive = index
         	if re.match("^\s*#\s*val-permissive-mode\s*:",item):
-			print "Found #val-permissive-mode line at %s:%s"%(index,item)
 			commentpermissive = index
+        	if dlvzone and not dlvanchorfile: 
+			if re.match("^\s*#*\s*dlv-anchor-file\s*:",item):
+				dlvanchorfile = index
 	if permissive:
 		(head,tail) = cnf[permissive].split("val-permissive-mode")
 		cnf[permissive] = "%sval-permissive-mode: %s\n"%(head,yesno)
 	elif commentpermissive:
 		(head,tail) = cnf[commentpermissive].split("#",1)
-		cnf[commentpermissive] = "%sval-permissive-mode: %s\n"%(head,yesno)
+		cnf[commentpermissive] = "%sval-permissive-mode: %s\n"%(re.sub("#","",head),yesno)
 	else:
 		cnf = cnf[1:serversect] + [ "   val-permissive-mode: %s"%yesno ] + cnf[serversect:]
+	if dlvzone:
+		if dlvanchorfile:
+			(head,tail) = cnf[dlvanchorfile].split("dlv-anchor-file")
+			cnf[dlvanchorfile] = "%s dlv-anchor-file: /etc/pki/dnssec-keys/dlv/%skey"%(re.sub("#","",head),dlvzone)
+		else:
+			cnf = cnf[1:serversect] + [ "%sdlv-anchor-file: /etc/pki/dnssec-keys/dlv/%skey"%(head,dlvzone) ] + cnf[serversect:]
 
+		if not os.path.isfile("/etc/pki/dnssec-keys/dlv/%skey"%dlvzone):
+			print "warning: /etc/pki/dnssec-keys/dlv/%skey not found. If you trust your network use 'dnskey-pull' to obtain it"%dlvzone
+	
 	fp = open("/tmp/unbound.conf","w")
 	fp.write("".join(cnf))
 	fp.close()
