@@ -1,0 +1,2 @@
+DLV trust anchors are in a seperate place. unbound needs a different
+format then bind, so both are located here.

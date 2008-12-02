@@ -10,6 +10,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch: noarch
 Requires: python-dns
 #Requires: a caching nameserver
+#Requires bind 9.4.0 if bind is reconfigured.....
 
 %description
 DNSSEC keys for priming recursing nameservers until the root is signed. These
