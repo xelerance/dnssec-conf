@@ -1,6 +1,6 @@
 # DNSSEC keys version 0.1, Nov 4 2008
 # by Paul Wouters <paul@xelerance.com>
-# http://www.xelerance.com/dnssec/
+# http://www.xelerance.com/software/dnssec-keys/
 #
 # This file contans notes on where and why we got certain DNSSEC keys
 # This is required to prime DNSSEC aware caching resolvers such as Bind or Unbound
