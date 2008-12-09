@@ -17,6 +17,8 @@ global namedconf
 namedconf = "/etc/named.conf"
 global unboundconf 
 unboundconf = "/etc/unbound/unbound.conf"
+global bversion
+bversion = "unknown"
 
 def usage():
 	print "dnssec-configure: (re)configure the Bind and/or Unbound for DNSSEC and DLV"
@@ -220,6 +222,29 @@ def checkBindConfig():
 	global namedconf
 	checkConfig(namedconf,"named-checkconf")
 
+# Check if bind version is 9.3.3 - 9.6.x
+def checkBindVersion():
+	global bversion
+	(status,bversion) = commands.getstatusoutput("named -v")[0];
+	if status != 0:
+		sys.exit("ERROR: unknown problem with named: %s "%bversion)
+	try:
+		if ver[0:5] <> "BIND ":
+			sys.exit("ERROR: unknown Bind version '%s'- aborted: %s "%bversion)
+		if (ver[6] in [ "4","8" ]):
+				sys.exit("ERROR: ANCIENT Bind version '%s' not supported. We only support 9.3.3 and higher")
+		if (ver[6] == "9") and (ver[8] in [ "4","5","6" ]):
+			bversion = "newstyle"
+			return
+		elif (ver[6] == "9") and (ver[8] =="3"):
+			if  ver[10] in ["1","2"]:
+				sys.exit("ERROR: Bind version '%s' not supported. We only support 9.3.3 and higher")
+			bversion = "oldstyle"
+			return
+		sys.exit("ERROR: unknown Bind version '%s'- aborted: %s "%bversion)
+	except:
+		sys.exit("ERROR: unknown Bind version syntax '%s'- aborted: %s "%bversion)
+
 # check will abort everything if it fails
 def checkConfig(conf, checkprog):
 	if not os.path.isfile(conf):
@@ -232,6 +257,7 @@ def checkConfig(conf, checkprog):
 # DNSSEC rewrite functions
 def BindEnableDNSSEC(dlvzone):
 	checkBindConfig()
+	checkBindVersion()
 	BindSetDNSSEC("yes",dlvzone)
 
 def BindDisableDNSSEC():
@@ -240,6 +266,7 @@ def BindDisableDNSSEC():
 
 def BindSetDNSSEC(yesno,dlvzone):
 	global namedconf
+	global bversion
 	fp = open(namedconf)
 	cnf = fp.readlines()
 	fp.close()
@@ -274,11 +301,14 @@ def BindSetDNSSEC(yesno,dlvzone):
 		if "dnssec-enable" in item:
 			enablefound = 1
 			(head,tail) = item.split("dnssec-enable")
-			optionscfg[index] = re.sub("#","",head) + "dnssec-enable %s;\n"%yesno
+			optionscfg[index] = re.sub("//","",head) + "dnssec-enable %s;\n"%yesno
 		if "dnssec-validation" in item:
 			validationfound = 1
 			(head,tail) = item.split("dnssec-validation")
-			optionscfg[index] = re.sub("#","",head) + "dnssec-validation %s;\n"%yesno
+			if bversion == "newstyle":
+				optionscfg[index] = re.sub("//","",head) + "dnssec-validation %s;\n"%yesno
+			else:
+				optionscfg[index] = re.sub("//","",head) + "// only in bind 9.3.3 and newer: dnssec-validation %s;\n"%yesno
 		if "dnssec-lookaside" in item:
 			dlvfound = 1
 			if not dlvzone:
