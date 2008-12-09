@@ -31,6 +31,7 @@ def usage():
 	print "examples:"
 	print "          dnskey-pull -a -s f.root-servers.net . arpa" 
 	print "          dnskey-pull -a -s ns-pri.ripe.net. e164.arpa ." 
+	print "          dnskey-pull -t xelerance.com >> /etc/named.conf" 
 	print "          dnskey-pull xelerance.com"
         
 	print "          -a = use AXFR to find all NS/DNSKEY records in a zone"
