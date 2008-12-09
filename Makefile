@@ -16,7 +16,7 @@ dnssec-configure.1:
 	xmlto man dnssec-configure.1.xml
 
 production.conf:
-	cat production/*.conf > production.conf
+	cat production/*.conf production/reverse/*.conf > production.conf
 
 testing.conf:
 	cat testing/*.conf > testing.conf
