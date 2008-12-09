@@ -12,6 +12,8 @@ import re
 import os
 import sys
 import getopt
+import tempfile
+
 global namedconf
 namedconf = "/etc/named.conf"
 global unboundconf 
@@ -326,13 +328,20 @@ def BindSetDNSSEC(yesno,dlvzone):
 			print "warning: /etc/pki/dnssec-keys/dlv/%sconf not found. If you trust your network use:"%dlvzone
 			print "         dnskey-pull -t -o /etc/pki/dnssec-keys/dlv/%sconf %s' to obtain it"%(dlvzone,dlvzone)
 
-	fpnew = open("/tmp/named.conf","w")
+	(fptmp,fname) = tempfile.mkstemp(".conf")
+	fpnew = os.fdopen(fptmp, 'w+b')
 	fpnew.write("".join(cnf[0:startopt]))
 	fpnew.write("".join(optionscfg))
 	fpnew.write("".join(cnf[(startopt+endopt+1):]))
+	# TODO must add trusted-keys sections here.
 	fpnew.close()
-	print "wrote /tmp/named.conf"
-	# must add trusted-keys sections now.
+	try:
+		os.unlink(namedconf +".bak")
+	except:
+		pass
+	shutil.copy2(namedconf, namedconf +".bak")
+	shutil.copy2(fname, namedconf)
+	os.unlink(fname)
 
 def UnboundEnableDNSSEC(dlvzone):
 	UnboundSetDNSSEC("yes",dlvzone)
@@ -386,10 +395,18 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 		if not os.path.isfile("/etc/pki/dnssec-keys/dlv/%skey"%dlvzone):
 			print "warning: /etc/pki/dnssec-keys/dlv/%skey not found. If you trust your network use 'dnskey-pull' to obtain it"%dlvzone
 	
-	fp = open("/tmp/unbound.conf","w")
-	fp.write("".join(cnf))
-	fp.close()
-
+	(fptmp,fname) = tempfile.mkstemp(".conf")
+	fpnew = os.fdopen(fptmp, 'w+b')
+	fpnew.write("".join(cnf))
+	# TODO must add trusted keys include? 
+	fpnew.close()
+	try:
+		os.unlink(unboundconf +".bak")
+	except:
+		pass
+	shutil.copy2(unboundconf, unboundconf +".bak")
+	shutil.copy2(fname, unboundconf)
+	os.unlink(fname)
 
 if __name__ == "__main__":
 	sys.exit(main())
