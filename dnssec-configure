@@ -68,6 +68,8 @@ def main(argv=None):
 	testing = ""
 	harvest = ""
 	root = ""
+	restartBind = 0
+	restartUnbound = 0
 	if not opts:
 		usage()
 		sys.exit()
@@ -192,24 +194,24 @@ def main(argv=None):
 
 		print "Enabling DNSSEC for: %s"%software
 		if bind:
-			BindEnableDNSSEC(dlvzone)
+			restartBind = BindEnableDNSSEC(dlvzone)
 		if unbound:
-			UnboundEnableDNSSEC(dlvzone)
+			restartUnbound = UnboundEnableDNSSEC(dlvzone)
 	else:
 		print "Disabling DNSSEC for: %s"%software
 		if bind:
-			BindDisableDNSSEC()
+			restartBind = BindDisableDNSSEC()
 		if unbound:
-			UnboundDisableDNSSEC()
+			restartUnbound = UnboundDisableDNSSEC()
 
 	# we modified the config files, verify and restart (not reload)
 	if bind:
 		checkBindConfig()
-		if commands.getstatusoutput("cmp %s %s.bak"%(namedconf,namedconf)[0]:
+		if restartBind:
 			restartDaemon("named")
 	if unbound:
 		checkUnboundConfig()
-		if commands.getstatusoutput("cmp %s %s.bak"%(unboundconf,namedconf)[0]:
+		if restartUnbound:
 			restartDaemon("unbound")
 
 def restartDaemon(daemon):
@@ -259,11 +261,12 @@ def checkConfig(conf, checkprog):
 		sys.exit("ERROR: syntax check for %s %s failed:%s"%(checkprog, conf,output))
 
 # overwrite config file with tmpfile securely, if neccessary, and clean up
+# returns 1 to restart daemon, 0 if that is not neccessary
 def UpdateConfigFile(cfgfile,tmpfile):
-	if not commands.getstatusoutput("cmp %s %sk"%(cfgfile,tmpfile)[0]:
+	if not commands.getstatusoutput("cmp %s %sk"%(cfgfile,tmpfile))[0]:
 		# config file did not change, we can't sys.exit since we might be doing 2 config files
 		os.unlink(tmpfile)
-		return
+		return 0
 	try:
 		os.unlink(cfgfile +".bak")
 	except:
@@ -277,16 +280,18 @@ def UpdateConfigFile(cfgfile,tmpfile):
 	# copy original permissions to new file
 	shutil.copymode(cfgfile +".bak",cfgfile)
 	os.unlink(tmpfile)
+	return 1
 
 # DNSSEC rewrite functions
 def BindEnableDNSSEC(dlvzone):
 	checkBindConfig()
 	checkBindVersion()
-	BindSetDNSSEC("yes",dlvzone)
+	return BindSetDNSSEC("yes",dlvzone)
 
 def BindDisableDNSSEC():
 	checkBindConfig()
-	BindSetDNSSEC("no","")
+	checkBindVersion()
+	return BindSetDNSSEC("no","")
 
 def BindSetDNSSEC(yesno,dlvzone):
 	global namedconf
@@ -359,13 +364,13 @@ def BindSetDNSSEC(yesno,dlvzone):
 	fpnew.write("".join(cnf[(startopt+endopt+1):]))
 	# TODO must add trusted-keys sections here.
 	fpnew.close()
-	UpdateConfigFile(namedconf,fname)
+	return UpdateConfigFile(namedconf,fname)
 
 def UnboundEnableDNSSEC(dlvzone):
-	UnboundSetDNSSEC("yes",dlvzone)
+	return UnboundSetDNSSEC("yes",dlvzone)
 
 def UnboundDisableDNSSEC():
-	UnboundSetDNSSEC("no","")
+	return UnboundSetDNSSEC("no","")
 
 # easiest is to remember is start of server: section
 #val-permissive-mode: yes
@@ -418,7 +423,7 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 	fpnew.write("".join(cnf))
 	# TODO must add trusted keys include? 
 	fpnew.close()
-	UpdateConfigFile(unboundconf,fname)
+	return UpdateConfigFile(unboundconf,fname)
 
 if __name__ == "__main__":
 	sys.exit(main())
