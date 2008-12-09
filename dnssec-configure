@@ -258,6 +258,26 @@ def checkConfig(conf, checkprog):
 	if status != 0:
 		sys.exit("ERROR: syntax check for %s %s failed:%s"%(checkprog, conf,output))
 
+# overwrite config file with tmpfile securely, if neccessary, and clean up
+def UpdateConfigFile(cfgfile,tmpfile):
+	if not commands.getstatusoutput("cmp %s %sk"%(cfgfile,tmpfile)[0]:
+		# config file did not change, we can't sys.exit since we might be doing 2 config files
+		os.unlink(tmpfile)
+		return
+	try:
+		os.unlink(cfgfile +".bak")
+	except:
+		pass
+	shutil.copy2(cfgfile, cfgfile +".bak")
+	shutil.copy2(tmpfile, cfgfile)
+	# copy original owner/group to new file
+	owner = os.stat(cfgfile)[ST_UID]
+	group = os.stat(cfgfile)[ST_GID]
+	os.chown(cfgfile,owner,group)
+	# copy original permissions to new file
+	shutil.copymode(cfgfile +".bak",cfgfile)
+	os.unlink(tmpfile)
+
 # DNSSEC rewrite functions
 def BindEnableDNSSEC(dlvzone):
 	checkBindConfig()
@@ -339,19 +359,7 @@ def BindSetDNSSEC(yesno,dlvzone):
 	fpnew.write("".join(cnf[(startopt+endopt+1):]))
 	# TODO must add trusted-keys sections here.
 	fpnew.close()
-	try:
-		os.unlink(namedconf +".bak")
-	except:
-		pass
-	shutil.copy2(namedconf, namedconf +".bak")
-	shutil.copy2(fname, namedconf)
-	# copy original owner/group to new file
-	owner = os.stat(namedconf)[ST_UID]
-	group = os.stat(namedconf)[ST_GID]
-	os.chown(namedconf,owner,group)
-	# copy original permissions to new file
-	shutil.copymode(namedconf +".bak",namedconf)
-	os.unlink(fname)
+	UpdateConfigFile(namedconf,fname)
 
 def UnboundEnableDNSSEC(dlvzone):
 	UnboundSetDNSSEC("yes",dlvzone)
@@ -410,19 +418,7 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 	fpnew.write("".join(cnf))
 	# TODO must add trusted keys include? 
 	fpnew.close()
-	try:
-		os.unlink(unboundconf +".bak")
-	except:
-		pass
-	shutil.copy2(unboundconf, unboundconf +".bak")
-	shutil.copy2(fname, unboundconf)
-	# copy original owner/group to new file
-	owner = os.stat(unboundconf)[ST_UID]
-	group = os.stat(unboundconf)[ST_GID]
-	os.chown(unboundconf,owner,group)
-	# copy original permissions to new file
-	shutil.copymode(unboundconf +".bak",unboundconf)
-	os.unlink(fname)
+	UpdateConfigFile(unboundconf,fname)
 
 if __name__ == "__main__":
 	sys.exit(main())
