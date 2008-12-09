@@ -211,7 +211,7 @@ def main(argv=None):
 def restartDaemon(daemon):
 	(status, output) = commands.getstatusoutput("/sbin/service %s restart"%daemon)
         if status:
-                print "ERROR:%s"%output
+                print "ERROR:\n%s"%output
 
 
 def checkUnboundConfig():
