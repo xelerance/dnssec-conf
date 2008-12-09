@@ -224,25 +224,25 @@ def checkBindConfig():
 # Check if bind version is 9.3.3 - 9.6.x
 def checkBindVersion():
 	global bversion
-	(status,bversion) = commands.getstatusoutput("named -v")[0];
-	if status != 0:
+	(status,bversion) = commands.getstatusoutput("named -v");
+	if status != 0 or bversion == "":
 		sys.exit("ERROR: unknown problem with named: %s "%bversion)
 	try:
-		if ver[0:5] <> "BIND ":
-			sys.exit("ERROR: unknown Bind version '%s'- aborted: %s "%bversion)
-		if (ver[6] in [ "4","8" ]):
-			sys.exit("ERROR: ANCIENT Bind version '%s' not supported. We only support 9.3.3 and higher")
-		if (ver[6] == "9") and (ver[8] in [ "4","5","6" ]):
+		if bversion[0:5] <> "BIND ":
+			sys.exit("ERROR: unknown Bind version '%s'- aborted:"%bversion)
+		if (bversion[5] in [ "4","8" ]):
+			sys.exit("ERROR: ANCIENT Bind version '%s' not supported. We only support 9.3.3 and higher"%bversion)
+		if (bversion[5] == "9") and (bversion[7] in [ "4","5","6" ]):
 			bversion = "newstyle"
 			return
-		elif (ver[6] == "9") and (ver[8] =="3"):
-			if  ver[10] in ["1","2"]:
-				sys.exit("ERROR: Bind version '%s' not supported. We only support 9.3.3 and higher")
+		elif (bversion[5] == "9") and (bversion[7] =="3"):
+			if  bversion[9] in ["1","2"]:
+				sys.exit("ERROR: Bind version '%s' not supported. We only support 9.3.3 and higher"%bversion)
 			bversion = "oldstyle"
 			return
-		sys.exit("ERROR: unknown Bind version '%s'- aborted: %s "%bversion)
+		sys.exit("ERROR: unknown Bind version '%s'- aborted"%bversion)
 	except:
-		sys.exit("ERROR: unknown Bind version syntax '%s'- aborted: %s "%bversion)
+		sys.exit("ERROR: unknown Bind version syntax '%s'- aborted:"%bversion)
 
 # check will abort everything if it fails
 def checkConfig(conf, checkprog):
