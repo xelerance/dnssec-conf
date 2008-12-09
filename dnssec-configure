@@ -273,7 +273,6 @@ def BindSetDNSSEC(yesno,dlvzone):
 
 	# find options sections. Assumptions for now: options { start on newline
 	# and first }; on a line by itself is the options closing tag
-	print "finding options section..."
 	startopt = 0
 	endopt = 0
 	for index, item in enumerate(cnf):
