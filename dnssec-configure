@@ -13,6 +13,7 @@ import os
 import sys
 import getopt
 import tempfile,shutil
+from stat import *
 
 global namedconf
 namedconf = "/etc/named.conf"
@@ -345,7 +346,7 @@ def BindSetDNSSEC(yesno,dlvzone):
 	# copy original owner/group to new file
 	owner = os.stat(namedconf)[ST_UID]
 	group = os.stat(namedconf)[ST_GID]
-	os.chown(unboundconf,owner,group)
+	os.chown(namedconf,owner,group)
 	# copy original permissions to new file
 	shutil.copymode(namedconf +".bak",namedconf)
 	os.unlink(fname)
