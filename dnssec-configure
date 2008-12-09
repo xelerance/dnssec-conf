@@ -5,7 +5,6 @@
 # TODO: allow specifying location of conf files
 # TODO: make work on debian/ubuntu (different way of starting services)
 # TODO: configurable path for /etc/pki/dnssec-keys/
-# TODO: DLV conf for unbound
 # TODO: add the proper production/testing/harvest conf files 
 
 import commands
@@ -232,7 +231,7 @@ def checkBindVersion():
 		if ver[0:5] <> "BIND ":
 			sys.exit("ERROR: unknown Bind version '%s'- aborted: %s "%bversion)
 		if (ver[6] in [ "4","8" ]):
-				sys.exit("ERROR: ANCIENT Bind version '%s' not supported. We only support 9.3.3 and higher")
+			sys.exit("ERROR: ANCIENT Bind version '%s' not supported. We only support 9.3.3 and higher")
 		if (ver[6] == "9") and (ver[8] in [ "4","5","6" ]):
 			bversion = "newstyle"
 			return
@@ -319,7 +318,10 @@ def BindSetDNSSEC(yesno,dlvzone):
 	if not enablefound:
 		optionscfg = optionscfg[:-1] + ["\tdnssec-enable %s;\n"%yesno] + [ "};\n" ]
 	if not validationfound:
-		optionscfg = optionscfg[:-1] + ["\tdnssec-validation %s;\n"%yesno]  + [ "};\n" ]
+		if bversion == "newstyle":
+			optionscfg = optionscfg[:-1] + ["\tdnssec-validation %s;\n"%yesno]  + [ "};\n" ]
+		else:
+			optionscfg = optionscfg[:-1] + ["\t// only in bind 9.3.3 and newer: dnssec-validation %s;\n"%yesno]  + [ "};\n" ]
 	if dlvzone:
 		if not dlvfound:
 			optionscfg = optionscfg[:-1] + ["\tdnssec-lookaside . trust-anchor %s;\n"%dlvzone]  + [ "};\n" ]
