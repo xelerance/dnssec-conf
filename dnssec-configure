@@ -205,10 +205,12 @@ def main(argv=None):
 	# we modified the config files, verify and restart (not reload)
 	if bind:
 		checkBindConfig()
-		restartDaemon("named")
+		if commands.getstatusoutput("cmp %s %s.bak"%(namedconf,namedconf)[0]:
+			restartDaemon("named")
 	if unbound:
 		checkUnboundConfig()
-		restartDaemon("unbound")
+		if commands.getstatusoutput("cmp %s %s.bak"%(unboundconf,namedconf)[0]:
+			restartDaemon("unbound")
 
 def restartDaemon(daemon):
 	(status, output) = commands.getstatusoutput("/sbin/service %s restart"%daemon)
