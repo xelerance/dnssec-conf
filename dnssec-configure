@@ -310,7 +310,8 @@ def BindSetDNSSEC(yesno,dlvzone):
 		if "dnssec-lookaside" in item:
 			dlvfound = 1
 			if not dlvzone:
-				optionscfg[index] = "\t// %s"%item
+				vals = item.split("dnssec-lookaside")[1]
+				optionscfg[index] = "\t// dnssec-lookaside%s"%vals
 			else:
 				optionscfg[index] = "\tdnssec-lookaside . trust-anchor " + dlvzone + ";\n"
 	# add entry for unfound settings
@@ -341,6 +342,12 @@ def BindSetDNSSEC(yesno,dlvzone):
 		pass
 	shutil.copy2(namedconf, namedconf +".bak")
 	shutil.copy2(fname, namedconf)
+	# copy original owner/group to new file
+	owner = os.stat(namedconf)[ST_UID]
+	group = os.stat(namedconf)[ST_GID]
+	os.chown(unboundconf,owner,group)
+	# copy original permissions to new file
+	shutil.copymode(namedconf +".bak",namedconf)
 	os.unlink(fname)
 
 def UnboundEnableDNSSEC(dlvzone):
@@ -406,6 +413,12 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 		pass
 	shutil.copy2(unboundconf, unboundconf +".bak")
 	shutil.copy2(fname, unboundconf)
+	# copy original owner/group to new file
+	owner = os.stat(unboundconf)[ST_UID]
+	group = os.stat(unboundconf)[ST_GID]
+	os.chown(unboundconf,owner,group)
+	# copy original permissions to new file
+	shutil.copymode(unboundconf +".bak",unboundconf)
 	os.unlink(fname)
 
 if __name__ == "__main__":
