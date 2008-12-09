@@ -329,7 +329,7 @@ def BindSetDNSSEC(yesno,dlvzone):
 			print "         dnskey-pull -t -o /etc/pki/dnssec-keys/dlv/%sconf %s' to obtain it"%(dlvzone,dlvzone)
 
 	fpnew = open("/tmp/named.conf","w")
-	fpnew.write("".join(cnf[1:startopt]))
+	fpnew.write("".join(cnf[0:startopt]))
 	fpnew.write("".join(optionscfg))
 	fpnew.write("".join(cnf[(startopt+endopt+1):]))
 	fpnew.close()
