@@ -298,22 +298,19 @@ def BindSetDNSSEC(yesno,dlvzone):
 		# change entry if there
 		if "dnssec-enable" in item:
 			enablefound = 1
-			(head,tail) = item.split("dnssec-enable")
-			optionscfg[index] = re.sub("//","",head) + "dnssec-enable %s;\n"%yesno
+			optionscfg[index] = "\tdnssec-enable %s;\n"%yesno
 		if "dnssec-validation" in item:
 			validationfound = 1
-			(head,tail) = item.split("dnssec-validation")
 			if bversion == "newstyle":
-				optionscfg[index] = re.sub("//","",head) + "dnssec-validation %s;\n"%yesno
+				optionscfg[index] = "\tdnssec-validation %s;\n"%yesno
 			else:
-				optionscfg[index] = re.sub("//","",head) + "// only in bind 9.3.3 and newer: dnssec-validation %s;\n"%yesno
+				optionscfg[index] = "\t// only in bind 9.3.3 and newer: dnssec-validation %s;\n"%yesno
 		if "dnssec-lookaside" in item:
 			dlvfound = 1
 			if not dlvzone:
-				optionscfg[index] = "// %s"%item
+				optionscfg[index] = "\t// %s"%item
 			else:
-				(head,tail) = item.split("dnssec-lookaside")
-				optionscfg[index] = re.sub("#","",head) + "dnssec-lookaside . trust-anchor " + dlvzone + ";\n"
+				optionscfg[index] = "\tdnssec-lookaside . trust-anchor " + dlvzone + ";\n"
 	# add entry for unfound settings
 	if not enablefound:
 		optionscfg = optionscfg[:-1] + ["\tdnssec-enable %s;\n"%yesno] + [ "};\n" ]
