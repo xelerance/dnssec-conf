@@ -188,13 +188,13 @@ def main(argv=None):
 				if dlvzone[0] == ".":
 					dlvzone = dlvzone[1:]
 
-		print "Enabling DNSSEC for: %s\n"%software
+		print "Enabling DNSSEC for: %s"%software
 		if bind:
 			BindEnableDNSSEC(dlvzone)
 		if unbound:
 			UnboundEnableDNSSEC(dlvzone)
 	else:
-		print "Disabling DNSSEC for: %s\n"%software
+		print "Disabling DNSSEC for: %s"%software
 		if bind:
 			BindDisableDNSSEC()
 		if unbound:
