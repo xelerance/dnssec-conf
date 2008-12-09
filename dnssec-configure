@@ -12,7 +12,7 @@ import re
 import os
 import sys
 import getopt
-import tempfile
+import tempfile,shutil
 
 global namedconf
 namedconf = "/etc/named.conf"
