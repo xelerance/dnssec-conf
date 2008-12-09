@@ -288,12 +288,12 @@ def BindSetDNSSEC(yesno,dlvzone):
 				optionscfg[index] = re.sub("#","",head) + "dnssec-lookaside . trust-anchor " + dlvzone + ";\n"
 	# add entry for unfound settings
 	if not enablefound:
-		optionscfg = optionscfg[:-1] + ["dnssec-enable %s;\n"%yesno] + [ "];\n" ]
+		optionscfg = optionscfg[:-1] + ["\tdnssec-enable %s;\n"%yesno] + [ "};\n" ]
 	if not validationfound:
-		optionscfg = optionscfg[:-1] + ["dnssec-validation %s"%yesno] + [ "};\n" ]
+		optionscfg = optionscfg[:-1] + ["\tdnssec-validation %s;\n"%yesno]  + [ "};\n" ]
 	if dlvzone:
 		if not dlvfound:
-			optionscfg = optionscfg[:-1] + ["dnssec-lookaside . trust-anchor %s"%dlvzone] + [ "};\n" ]
+			optionscfg = optionscfg[:-1] + ["\tdnssec-lookaside . trust-anchor %s;\n"%dlvzone]  + [ "};\n" ]
 		if not os.path.isfile("/etc/pki/dnssec-keys/dlv/%sconf"%dlvzone):
 			print "warning: /etc/pki/dnssec-keys/dlv/%sconf not found. If you trust your network use:"%dlvzone
 			print "         dnskey-pull -t -o /etc/pki/dnssec-keys/dlv/%sconf %s' to obtain it"%(dlvzone,dlvzone)
