@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+                   "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<!-- lifted from troff+man by doclifter -->
+<refentry id='dnskeypull1'>
+<refentryinfo><date>7 November 2008</date></refentryinfo>
+<refmeta>
+<refentrytitle>DNSKEY-PULL</refentrytitle>
+<manvolnum>1</manvolnum>
+<refmiscinfo class='date'>7 November 2008</refmiscinfo>
+<refmiscinfo class='manual'>User's Manual</refmiscinfo>
+</refmeta>
+<refnamediv id='name'>
+<refname>dnskey-pull</refname>
+<refpurpose> fetch DNSKEY records from a zone or from all sub-zones</refpurpose>
+</refnamediv>
+<!-- body begins here -->
+<refsynopsisdiv id='synopsis'>
+<cmdsynopsis>
+  <command>dnskey-pull</command>    
+    <arg choice='opt'>-a </arg>
+    <arg choice='opt'>-t </arg>
+    <arg choice='opt'><arg choice='plain'>-o </arg><arg choice='plain'><replaceable>&lt;output&gt;</replaceable></arg></arg>
+    <arg choice='opt'><arg choice='plain'>-s </arg><arg choice='plain'><replaceable>&lt;ns&gt;</replaceable></arg></arg>
+    <arg choice='plain'><replaceable>zone</replaceable></arg>
+    <arg choice='plain'><replaceable>[..]</replaceable></arg>
+</cmdsynopsis>
+</refsynopsisdiv>
+
+
+<refsect1 id='description'><title>DESCRIPTION</title>
+<para><command>dnskey-pull</command>
+obtains Key-Signing-Key (KSK) DNSKEY records for use as
+<emphasis remap='I'>trust-anchor</emphasis>
+with recursing nameserver that are setup to use
+<emphasis remap='B'>DNSSEC.</emphasis></para>
+
+<para>dnskey-pull itself performs
+no DNSSEC validation. dnskey-pull pulls KSK DNSKEY records for a single
+zone but can also be told, if it has
+<emphasis remap='I'>zone-transfer</emphasis>
+(AXFR) permission, to lookup KSK DNSKEY records for all NS records found
+in a zone. This latter feature can be used to find new DNSKEY's in TLD's.</para>
+
+<para>The output of this command can be directly included in the configuration
+files for the 
+<emphasis remap='B'>Bind</emphasis>
+and
+<emphasis remap='B'>Unbound</emphasis>
+recursing nameservers as DNSSEC trust anchor.</para>
+
+<para>dnskey-pull ignores the system's
+<filename>/etc/resolv.conf</filename>
+setting for domain appending, and treats all zone arguments as FQDN.
+It does use the system's resolver settings for recursive lookups.</para>
+
+</refsect1>
+
+<refsect1 id='options'><title>OPTIONS</title>
+<variablelist remap='IP'>
+  <varlistentry>
+  <term><option>-a</option></term>
+  <listitem>
+<para>Use a zone-transfer (AXFR) to find all NS records in a zone and return any
+DNSKEY records found for these NS records in
+<emphasis remap='I'>trusted-key</emphasis>
+format. Note that AXFR is often blocked on nameservers.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-s&nbsp;&lt;</option><replaceable>nameserver&gt;</replaceable></term>
+  <listitem>
+<para>Use the specified nameserver to perform the zone-transfer (AXFR).</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-t</option></term>
+  <listitem>
+<para>Return the resulting DNSKEY's within a
+<emphasis remap='I'>trusted-key { };</emphasis>
+statement, compatible for including with a
+<emphasis remap='I'>bind</emphasis>
+or
+<emphasis remap='I'>unbound</emphasis>
+nameserver configuration.</para>
+  </listitem>
+  </varlistentry>
+</variablelist>
+</refsect1>
+
+<refsect1 id='examples'><title>EXAMPLES</title>
+<para>Get all DNSKEY records for Top Level Domains (TLD's) in the Root (".") zone,
+using the F root-server that allows zone-transfers:</para>
+
+<para><emphasis remap='B'>% dnskey-pull -t -a -s f.root-servers.net .</emphasis></para>
+
+<para>Get a trusted-key statement for the xelerance.com zone:</para>
+
+<para><emphasis remap='B'>% dnskey-pull -t xelerance.com</emphasis></para>
+
+<para>Get the trusted keys for the TLD's of Sweden, Brasil and Bulgaria:</para>
+
+<para><emphasis remap='B'>% dnskey-pull se. br. bg.</emphasis></para>
+
+<para>Find all secured
+<emphasis remap='I'>ENUM</emphasis>
+zones:</para>
+
+<para><emphasis remap='B'>% dnskey-pull -a -s ns-pri.ripe.net. e164.arpa.</emphasis></para>
+</refsect1>
+
+<refsect1 id='see_also'><title>SEE ALSO</title>
+<para><citerefentry><refentrytitle>dnssec-conf</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>named.conf</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>unbound.conf</refentrytitle><manvolnum>8</manvolnum></citerefentry>.</para>
+</refsect1>
+
+<refsect1 id='author'><title>AUTHOR</title>
+<para>Paul Wouters &lt;paul@xelerance.com&gt;</para>
+</refsect1>
+</refentry>
+

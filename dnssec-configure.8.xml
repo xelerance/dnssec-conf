@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+                   "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<!-- lifted from troff+man by doclifter -->
+<refentry id='dnssecconfigure1'>
+<!--      Title: DNSSEC\-CONFIGURE -->
+<!--     Author: [see the "AUTHOR" section] -->
+<!--  Generator: DocBook XSL Stylesheets v1.74.0 &lt;<ulink url='http://docbook.sf.net/'>http://docbook.sf.net/</ulink>&gt; -->
+<!--       Date: 10 December 2008 -->
+<!--     Manual: User&acute;s Manual -->
+<!--     Source: User's Manual -->
+<!--   Language: English -->
+
+<refentryinfo><date>10 December 2008</date></refentryinfo>
+<refmeta>
+<refentrytitle>DNSSEC-CONFIGURE</refentrytitle>
+<manvolnum>8</manvolnum>
+<refmiscinfo class='date'>10 December 2008</refmiscinfo>
+<refmiscinfo class='source'>User's Manual</refmiscinfo>
+<refmiscinfo class='manual'>User&acute;s Manual</refmiscinfo>
+</refmeta>
+<refnamediv id='name'>
+<refname>dnssec-configure</refname>
+<refpurpose>update recursive nameserver configuration options and keys for
+ <emphasis remap='I'>DNSSEC</emphasis> and <emphasis remap='I'>DLV</emphasis>.
+ Currently Bind (named) and Unbound are supported.
+</refpurpose>
+</refnamediv>
+<!-- body begins here -->
+<refsynopsisdiv id='synopsis'>
+<cmdsynopsis>
+  <command>dnssec-configure</command>    <arg choice='opt'>-u </arg>
+    <arg choice='opt'>-b </arg>
+    <group choice='plain'>
+       <arg choice='plain'>--dnssec=<replaceable>on</replaceable></arg>
+       <arg choice='plain'><replaceable>off</replaceable></arg>
+    </group>
+    <group choice='plain'>
+       <arg choice='plain'>--dlv=<replaceable>on</replaceable></arg>
+       <arg choice='plain'><replaceable>off</replaceable></arg>
+       <arg choice='plain'><replaceable>&lt;dlvzone&gt;</replaceable></arg>
+    </group>
+    <arg choice='opt'>--basedir=<replaceable>&lt;dir&gt;</replaceable></arg>
+    <arg choice='opt'>--production </arg>
+    <arg choice='opt'>--testing </arg>
+    <arg choice='opt'>--harvest </arg>
+    <arg choice='opt'>--root </arg>
+</cmdsynopsis>
+</refsynopsisdiv>
+
+<refsect1 id='description'><title>DESCRIPTION</title>
+<para>dnssec-configure rewrites the configuration files of the
+<emphasis remap='I'>Bind (named)</emphasis> and/or the
+<emphasis remap='I'>Unbound</emphasis> nameservers. It verifies the
+configuration before rewriting it, and restarts the nameserver(s) if
+neccessary.</para>
+</refsect1>
+
+<refsect1 id='options'><title>OPTIONS</title>
+<variablelist remap='IP'>
+  <varlistentry>
+  <term><option>-b (-n)</option></term>
+  <listitem>
+<para>Update the <emphasis remap='I'>Bind (named)</emphasis>
+ nameserver configuration.</para>
+  </listitem>
+  </varlistentry>
+
+  <varlistentry>
+  <term><option>-u</option></term>
+  <listitem>
+<para>Update the <emphasis remap='I'>Unbound</emphasis>
+ nameserver configuration.</para>
+  </listitem>
+  </varlistentry>
+</variablelist>
+<para>If neither options are specified, <emphasis remap='I'>-b -u</emphasis>
+is assumed.</para>
+<variablelist>
+  <varlistentry>
+  <term><option>--dnssec=</option>&lt;on|off>&gt;</term>
+  <listitem>
+<para>
+This option will enable or disable all <emphasis remap='I'>DNSSEC</emphasis>
+processing by the nameserver. When enabled, detected spoofed or otherwise
+verifiably false DNS answers will not be returned. Instead, a
+<emphasis remap='I'>SERVFAIL</emphasis> is returned. The application is
+responsible for further investigation. When disabled, classic DNS services run
+without any advanced protection.
+</para>
+  </listitem>
+  </varlistentry>
+
+  <varlistentry>
+  <term><option>--dlv=</option>&lt;on|off|<replaceable>dlvzone</replaceable>&gt;</term>
+  <listitem>
+<para>
+This option will enable or disable <emphasis remap='I'>DLV</emphasis>,
+or "DNSSEC Lookaside Verification" (RFC 5074). This is a method for using
+DNSSEC in TLD's that themselves do not support DNSSEC. It works by offloading
+DNS queries for all TLD's for which no DNSSEC keys are loaded to a DLV Registry.
+The Trusted Key for the DLV Registry must be available.
+The default DLV Registry (when using the value 
+<emphasis remap='I'>on</emphasis>, is the <emphasis remap='B'>ISC DLV</emphasis>
+(http://dlv.isc.org/)i. The ISC DLV Key is pre-installed with this software.
+You can specify your own DLV Registry, but you must make sure the <emphasis remap='I'>dlvzone</emphasis>'s key is installed in
+<emphasis remap='I'>/etc/pki/dnssec/dlv/dlvzone.key</emphasis>.
+</para>
+  </listitem>
+  </varlistentry>
+
+  <varlistentry>
+  <term><option>--basedir</option><replaceable>&lt;dir&gt;</replaceable></term>
+  <listitem>
+<para>The basedir for Trusted Key files. The default is
+<emphasis remap='I'>/etc/pki/dnssec-keys/</emphasis>. NOT YET IMPLEMENTED
+</para>
+  </listitem>
+  </varlistentry>
+</variablelist>
+
+<para>The following options determine which Trusted Keys to preload with
+the nameserver software. Without Trusted Keys, no DNSSEC verification is
+possible. At some point, when the Root is signed, only one key would need
+to be preloaded. This is not yet the case.</para>
+
+<variablelist>
+  <varlistentry>
+  <term><option>--production</option></term>
+  <listitem>
+<para>Include Trusted Keys that are in full production. These keys have
+been analysed by people in the DNS community or have been publicly announced
+by their TLD to be production ready. If no Trusted Keys options are specified,
+only this setting will be enabled. These keys can be found in
+<emphasis remap='I'>/etc/pki/dnssec-keys/production.conf</emphasis>.
+</para>
+  </listitem>
+  </varlistentry>
+
+  <varlistentry>
+  <term><option>--testing</option></term>
+  <listitem>
+<para>Include Trusted Keys that are in testing mode. These keys tend to
+be reasonably stable, or have been found and verified but not officially
+announced by its TLD. These are not included per default.
+These keys can be found in
+<emphasis remap='I'>/etc/pki/dnssec-keys/testing.conf</emphasis>.
+</para>
+  </listitem>
+  </varlistentry>
+
+  <varlistentry>
+  <term><option>--harvest</option></term>
+  <listitem>
+<para>Include Trusted Keys that are harvested and/or added by the local
+system administrator themselves. 
+These keys can be found in
+<emphasis remap='I'>/etc/pki/dnssec-keys/harvest.conf</emphasis>.
+</para>
+  </listitem>
+  </varlistentry>
+
+  <varlistentry>
+  <term><option>--root</option></term>
+  <listitem>
+<para>Include the Trusted Keys for the Root Zone. Currently the root
+is not signed, and there is no root key available. A test Root key
+is available from IANA, but this requires using a separate resolver
+at IANA's. Do not use this option. </para>
+  </listitem>
+  </varlistentry>
+</variablelist>
+
+</refsect1>
+
+<refsect1 id='examples'><title>EXAMPLES</title>
+<para>Enable DNSSEC with production keys and ISC's DLV Registry for all
+nameserver software found on the machine</para>
+<para><emphasis remap='B'># dnssec-configure --dnssec=on --dlv=on</emphasis></para>
+
+<para>For the Unbound nameserver, enable DNSSEC with production and testing keys, and use dlv.xelerance.com
+as the DLV Registry</para>
+<para><emphasis remap='B'># dnssec-configure -u --dnssec=on --dlv=dlv.xelerance.com --production --testing</emphasis></para>
+
+<para>For the Bind nameserver, disable dnssec</para>
+<para><emphasis remap='B'># dnssec-configure -b --dnssec=off</emphasis></para>
+</refsect1>
+
+<refsect1 id='requirements'><title>REQUIREMENTS</title>
+<para>One or both of the known DNSSEC capable nameservers, Bind and Unbound,
+is required. To support <emphasis remap='I'>RFC 5011</emphasis> style automatic
+key updates, the <emphasis remap='I'>autotrust</emphasis> software is needed
+along with a cron daemon.
+</para>
+</refsect1>
+<refsect1 id='trusted_keys'><title>TRUSTED KEYS</title>
+<para>The format of the key files is carefully chosen to be compatible with
+both Bind and Unbound. Key files are stored in individual files so that they
+can be easilly verified and updated by autotrust. The keys are grouped in
+their respective categories production, testing and harvest. If you have
+local DNSSEC keys you wish to preload, you can add these to one of these three
+directories and re-run dnssec-configure to rebuild the production.conf,
+testing.conf and harvest.conf files based which are based on the contents of the
+<emphasis remap='U'>/etc/pki/dnssec-keys/{production,testing,harvest}</emphasis>
+directories. If you wish to use another DLV, add the key for the DLV zone to
+<emphasis remap='U'>/etc/pki/dnssec-keys/dlv/dlvzone.domain.key</emphasis>.
+</para>
+</refsect1>
+
+<refsect1 id='see_also'><title>SEE ALSO</title>
+<para><emphasis remap='CB'>dnskey-pull</emphasis>(1),
+<emphasis remap='CB'>unbound-host</emphasis>(1),
+<emphasis remap='CB'>system-config-dnssec</emphasis>(8),
+<emphasis remap='CB'>autotrust</emphasis>(8),
+<emphasis remap='CB'>named.conf</emphasis>(8),
+<emphasis remap='CB'>unbound.conf</emphasis>(8).</para>
+</refsect1>
+
+<refsect1 id='author'><title>AUTHOR</title>
+<para>Paul Wouters &lt;paul@xelerance.com&gt;</para>
+</refsect1>
+</refentry>
+
