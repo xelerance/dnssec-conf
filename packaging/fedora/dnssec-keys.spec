@@ -26,7 +26,7 @@ of keys, and harvested keys, as well a script to harvest DNSKEY's from DNS.
 make 
 
 %install
-make install
+make DESTDIR=${RPM_BUILD_ROOT} install
 
 %clean
 rm -rf ${RPM_BUILD_ROOT}
