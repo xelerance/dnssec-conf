@@ -5,7 +5,7 @@
 # TODO: allow specifying location of conf files
 # TODO: make work on debian/ubuntu (different way of starting services)
 # TODO: configurable path for /etc/pki/dnssec-keys/
-# TODO: add the proper production/testing/harvest conf files 
+# TODO: add the proper production/testing/harvest conf files as include statements to bind/unbound
 
 import commands
 import re
@@ -362,7 +362,7 @@ def BindSetDNSSEC(yesno,dlvzone):
 	fpnew.write("".join(cnf[0:startopt]))
 	fpnew.write("".join(optionscfg))
 	fpnew.write("".join(cnf[(startopt+endopt+1):]))
-	# TODO must add trusted-keys sections here.
+	# TODO must add/remove trusted-keys sections here.
 	fpnew.close()
 	return UpdateConfigFile(namedconf,fname)
 
@@ -421,7 +421,7 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 	(fptmp,fname) = tempfile.mkstemp(".conf")
 	fpnew = os.fdopen(fptmp, 'w+b')
 	fpnew.write("".join(cnf))
-	# TODO must add trusted keys include? 
+	# TODO must add/remove trusted-keys sections here.
 	fpnew.close()
 	return UpdateConfigFile(unboundconf,fname)
 

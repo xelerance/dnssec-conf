@@ -36,13 +36,12 @@ rm -rf ${RPM_BUILD_ROOT}
 %defattr(-,root,root)
 %doc LICENSE README
 %attr(0755,root,root) %dir %{_sysconfdir}/pki/%{name}
+%attr(0644,root,root) %config %{_sysconfdir}/pki/%{name}/*/*
 %attr(0755,root,root) %dir %{_sysconfdir}/pki/%{name}/production
 %attr(0755,root,root) %dir %{_sysconfdir}/pki/%{name}/production/reverse
 %attr(0755,root,root) %dir %{_sysconfdir}/pki/%{name}/testing
 %attr(0755,root,root) %dir %{_sysconfdir}/pki/%{name}/harvest
 %attr(0755,root,root) %dir %{_sysconfdir}/pki/%{name}/dlv
-%attr(0755,root,root) %{_sysconfdir}/pki/%{name}/*/*
-#%attr(0755,root,root) %{_sysconfdir}/pki/%{name}/*/*/*
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/pki/%{name}/*.conf
 %{_bindir}/dnskey-pull
 %{_sbindir}/dnssec-configure
