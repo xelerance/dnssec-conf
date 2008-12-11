@@ -110,9 +110,12 @@ zones:</para>
 </refsect1>
 
 <refsect1 id='see_also'><title>SEE ALSO</title>
-<para><citerefentry><refentrytitle>dnssec-conf</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+<para><citerefentry><refentrytitle>dnssec-configure</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+<para><citerefentry><refentrytitle>system-config-dnssec</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
 <citerefentry><refentrytitle>named.conf</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
 <citerefentry><refentrytitle>unbound.conf</refentrytitle><manvolnum>8</manvolnum></citerefentry>.</para>
+<citerefentry><refentrytitle>autotrust</refentrytitle><manvolnum>8</manvolnum></citerefentry>.</para>
+<citerefentry><refentrytitle>unbound-host</refentrytitle><manvolnum>8</manvolnum></citerefentry>.</para>
 </refsect1>
 
 <refsect1 id='author'><title>AUTHOR</title>
