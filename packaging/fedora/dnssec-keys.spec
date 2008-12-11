@@ -27,8 +27,6 @@ make
 
 %install
 rm -rf %{buildroot}
-umask
-sleep 60
 make DESTDIR=${RPM_BUILD_ROOT} install
 
 %clean
