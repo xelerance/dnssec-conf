@@ -48,6 +48,6 @@ rm -rf ${RPM_BUILD_ROOT}
 %{_mandir}/*/*
 
 %changelog
-* Fri Nov  7 2008 Paul Wouters <paul@xelerance.com> 1.01-1 -
+* Fri Nov  7 2008 Paul Wouters <paul@xelerance.com> 1.0-1
 - Initial release
 

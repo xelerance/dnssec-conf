@@ -37,8 +37,8 @@ install:
 	install -m 0755 dnssec-configure $(DESTDIR)/$(SBINDIR)
 	install -m 0644 dnskey-pull.1 $(DESTDIR)/$(MANDIR)/man1/
 	install -m 0644 dnssec-configure.8 $(DESTDIR)/$(MANDIR)/man8/
-	cp -av production testing harvest dlv $(DESTDIR)/$(KEYSDIR)/
-	cp -av *.conf $(DESTDIR)/$(KEYSDIR)/
+	cp -a production testing harvest dlv $(DESTDIR)/$(KEYSDIR)/
+	cp -a *.conf $(DESTDIR)/$(KEYSDIR)/
 	@echo
 	@echo "Run dnssec-configure to enable one or more Trusted Keys repositories and DNSSEC and/or DLV options."
 	@echo
