@@ -1,7 +1,7 @@
 Summary: DNSSEC keys for priming recursing nameservers until the root is signed
 Name: dnssec-keys
-Version: 1.01
-Release: 3
+Version: 1.0
+Release: 1
 License: GPLv2+
 Url: http://www.xelerance.com/software/dnssec-keys/
 Source: %{name}-%{version}.tar.gz
