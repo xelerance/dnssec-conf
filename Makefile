@@ -32,7 +32,7 @@ clean:
 	rm -f production.conf testing.conf harvest.conf *.1 *.8
 
 install:
-	mkdir -p $(DESTDIR)/$(BINDIR) $(DESTDIR)/$(SBINDIR) $(DESTDIR)/$(MANDIR)/man1 $(DESTDIR)/$(MANDIR)/man8 $(DESTDIR)/$(KEYSDIR)
+	mkdir -m0755 -p $(DESTDIR)/$(BINDIR) $(DESTDIR)/$(SBINDIR) $(DESTDIR)/$(MANDIR)/man1 $(DESTDIR)/$(MANDIR)/man8 $(DESTDIR)/$(KEYSDIR)
 	install -m 0755 dnskey-pull $(DESTDIR)/$(BINDIR)
 	install -m 0755 dnssec-configure $(DESTDIR)/$(SBINDIR)
 	install -m 0644 dnskey-pull.1 $(DESTDIR)/$(MANDIR)/man1/

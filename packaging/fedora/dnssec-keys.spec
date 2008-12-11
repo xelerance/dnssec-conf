@@ -26,6 +26,9 @@ of keys, and harvested keys, as well a script to harvest DNSKEY's from DNS.
 make 
 
 %install
+rm -rf %{buildroot}
+umask
+sleep 60
 make DESTDIR=${RPM_BUILD_ROOT} install
 
 %clean
