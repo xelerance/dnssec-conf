@@ -39,6 +39,18 @@ def usage():
 	print "If no nameserver is specified, the system resolver is used for AXFR."
 	print "The system resolver is always used for DNSKEY queries." 
 
+# calculate key tag
+def calcKeyTag(dnskey, flags, protocol, algorithm ):
+	if not dnskey:
+		return ""
+	ac=0
+	i=0
+	dnskey += chr((flags >> 8) & 0xff) + chr(flags & 0xff) + chr(protocol & 0xff) + chr(algorithm & 0xff)
+	for c in dnskey:
+		ac += (ord(c) << (((i&1)^1)*8)) & 0xffff
+		i  += 1
+	return ((ac + (ac >> 16)) & 0xffff)
+
 def main(argv=None):
 	if argv is None:
 		argv = sys.argv
@@ -144,9 +156,10 @@ def getkey(zone,ns):
 				print puny
 		for rdata in answers.rrset:
 			if rdata.flags == 257:
-				msg =  '"%s" %s %s %s "%s";'%(zone, rdata.flags,
+				keytag = calcKeyTag(rdata.key,rdata.flags,rdata.protocol,rdata.algorithm)
+				msg =  '"%s" %s %s %s "%s"; // key id = %s'%(zone, rdata.flags,
 					rdata.protocol, rdata.algorithm,
-					base64.b64encode(rdata.key) )
+					base64.b64encode(rdata.key), keytag )
 				if outputfp:
 					outputfp.write(msg)
 				else:
