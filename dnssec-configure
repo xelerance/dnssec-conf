@@ -26,6 +26,7 @@ def usage():
 	print "dnssec-configure: (re)configure the Bind and/or Unbound for DNSSEC and DLV"
 	print "usage: dnssec-configure [-u] [-b] [--dnssec=<on|off>] --dlv=<off|on[dlvzone]>"
 	print "                        [--production] [--testing] [--harvest] [--root]"
+	print "                        [--keepkeyconfs]"
 	print "examples:"
 	print "   dnssec-configure -u -b --dnssec=on --dlv=dlv.isc.org --production"
 	print "   dnsec-configure --dnssec=on -dlv=on --production --testing --harvest"
@@ -40,6 +41,7 @@ def usage():
 	print "   --testing         load testing keys into configuration (default no)"
 	print "   --harvest         load harvest keys into configuration (default no)"
 	print "   --root            load root key into configuration [not yet implemented]"
+	print "   --keepkeyconfs    do not regenerate the key *.conf files from their directory contents (default no)"
 
 def main(argv=None):
 #	if commands.getoutput( "whoami" ) != "root":
@@ -48,7 +50,7 @@ def main(argv=None):
 	if argv is None:
 		argv = sys.argv
 	try:
-		opts, args = getopt.getopt(argv[1:], "bnuvh1:2:3:4567", ["bind","named", "unbound", "version","help","dnssec=","dlv=","basedir=","production","testing","harvest","root"])
+		opts, args = getopt.getopt(argv[1:], "bnuvh1:2:3:45678", ["bind","named", "unbound", "version","help","dnssec=","dlv=","basedir=","production","testing","harvest","root","keepkeyconfs"])
 	except getopt.error, msg:
 		#print >>sys.stderr, err.msg
 		print >>sys.stderr, "ERROR parsing options"
@@ -67,6 +69,7 @@ def main(argv=None):
 	production = ""
 	testing = ""
 	harvest = ""
+	keepkeyconfs = 0
 	root = ""
 	restartBind = 0
 	restartUnbound = 0
@@ -103,6 +106,8 @@ def main(argv=None):
 			harvest = 1
 		if o in ("--root"):
 			root = 1
+		if o in ("--keepkeyconfs"):
+			keepkeyconfs = 1
 
 		if o in ("-1","--dnssec"):
 			if not a:
@@ -135,6 +140,8 @@ def main(argv=None):
 		# nothing specified, default is both
 		bind = 1
 		unbound = 1
+
+
 	# check write perms
 	if bind:
 		try:
@@ -152,6 +159,33 @@ def main(argv=None):
 	if not dnssec:
 		# then also disable dlv
 		dlv = 0
+	else:
+		# we are using dnssec, so rebuild the include files, and if no keys were defind, use production only
+		# TODO: since we're using the same includes for both bind and unbound it might change behaviour
+		# of the daemon not modified in this run
+
+		if not keepkeyconfs:
+			if not production and not testing and not harvest:
+				production = 1
+
+			if production:
+				commands.getoutput("/bin/cat /etc/pki/dnssec-keys/production/*.conf > /etc/pki/dnssec-keys/production.conf")
+			else:
+				delme = open("/etc/pki/dnssec-keys/production.conf","w")
+				delme.close()
+
+			if testing:
+				commands.getoutput("/bin/cat /etc/pki/dnssec-keys/testing/*.conf > /etc/pki/dnssec-keys/testing.conf")
+			else:
+				delme = open("/etc/pki/dnssec-keys/testing.conf","w")
+				delme.close()
+
+			if harvest:
+				commands.getoutput("/bin/cat /etc/pki/dnssec-keys/harvest/*.conf > /etc/pki/dnssec-keys/harvest.conf")
+			else:
+				delme = open("/etc/pki/dnssec-keys/harvest.conf","w")
+				delme.close()
+
 	if dlv == -1:
 		print "error: dlv setting not specified"
 		usage()
@@ -169,6 +203,7 @@ def main(argv=None):
 		sys.exit()
 
 	software = []
+
 	if bind:
 		software.append("bind")
 	if unbound:
@@ -176,12 +211,6 @@ def main(argv=None):
 	software = ",".join(software)
 
 	if dnssec:
-		# create conffiles string to include
-		conffiles = ""
-		if production: conffiles = conffiles + basedir + "/production.conf"
-		if testing: conffiles = conffiles + basedir + "/testing.conf"
-		if harvest: conffiles = conffiles + basedir + "/harvest.conf"
-		if root: conffiles = conffiles + basedir + "/root.conf"
 		if not dlv:
 			dlvzone = ""
 		else:
@@ -214,11 +243,12 @@ def main(argv=None):
 		if restartUnbound:
 			restartDaemon("unbound")
 
+
+
 def restartDaemon(daemon):
 	(status, output) = commands.getstatusoutput("/sbin/service %s restart"%daemon)
         if status:
                 print "ERROR:\n%s"%output
-
 
 def checkUnboundConfig():
 	global unboundconf
@@ -324,6 +354,9 @@ def BindSetDNSSEC(yesno,dlvzone):
 	enablefound = 0 
 	validationfound = 0
 	dlvfound = 0
+	prodfound = 0
+	testfound = 0
+	harvestfound = 0
 	for index,item in enumerate(optionscfg):
 		# change entry if there
 		if "dnssec-enable" in item:
@@ -342,6 +375,7 @@ def BindSetDNSSEC(yesno,dlvzone):
 				optionscfg[index] = "\t// dnssec-lookaside%s"%vals
 			else:
 				optionscfg[index] = "\tdnssec-lookaside . trust-anchor " + dlvzone + ";\n"
+
 	# add entry for unfound settings
 	if not enablefound:
 		optionscfg = optionscfg[:-1] + ["\tdnssec-enable %s;\n"%yesno] + [ "};\n" ]
@@ -390,6 +424,9 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 	permissive = 0
 	commentpermissive = 0
 	dlvanchorfile = 0
+	prodfound = 0
+	testfound = 0
+	harvestfound = 0
 	for index, item in enumerate(cnf):
         	if re.match("^\s*server:\s*",item):
 			serversect = index
@@ -400,6 +437,14 @@ def UnboundSetDNSSEC(yesno,dlvzone):
         	if dlvzone and not dlvanchorfile: 
 			if re.match("^\s*#*\s*dlv-anchor-file\s*:",item):
 				dlvanchorfile = index
+		if re.match("^\s*trusted-keys-file:", item):
+			if "/etc/pki/dnssec-keys/production.conf" in item:
+				prodfound = index
+			elif "/etc/pki/dnssec-keys/testing.conf" in item:
+				testfound = index
+			elif "/etc/pki/dnssec-keys/harvest.conf" in item:
+				harvestfound = index
+
 	if permissive:
 		(head,tail) = cnf[permissive].split("val-permissive-mode")
 		cnf[permissive] = "%sval-permissive-mode: %s\n"%(head,yesno)
@@ -407,21 +452,28 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 		(head,tail) = cnf[commentpermissive].split("#",1)
 		cnf[commentpermissive] = "%sval-permissive-mode: %s\n"%(re.sub("#","",head),yesno)
 	else:
-		cnf = cnf[1:serversect] + [ "   val-permissive-mode: %s"%yesno ] + cnf[serversect:]
+		cnf.insert(serversect+1, "\tval-permissive-mode: %s"%yesno )
 	if dlvzone:
 		if dlvanchorfile:
 			(head,tail) = cnf[dlvanchorfile].split("dlv-anchor-file")
-			cnf[dlvanchorfile] = "%s dlv-anchor-file: /etc/pki/dnssec-keys/dlv/%skey"%(re.sub("#","",head),dlvzone)
+			cnf[dlvanchorfile] = '%s dlv-anchor-file: "/etc/pki/dnssec-keys/dlv/%skey"\n'%(re.sub("#","",head),dlvzone)
 		else:
-			cnf = cnf[1:serversect] + [ "%sdlv-anchor-file: /etc/pki/dnssec-keys/dlv/%skey"%(head,dlvzone) ] + cnf[serversect:]
+			cnf.insert(serversect+1, "%sdlv-anchor-file: /etc/pki/dnssec-keys/dlv/%skey"%(head,dlvzone))
 
 		if not os.path.isfile("/etc/pki/dnssec-keys/dlv/%skey"%dlvzone):
 			print "warning: /etc/pki/dnssec-keys/dlv/%skey not found. If you trust your network use 'dnskey-pull' to obtain it"%dlvzone
+
+	# add potential missing lines to include trusted-keys-file 
+	if not prodfound:
+		cnf.insert(serversect+1, '\ttrusted-keys-file: "/etc/pki/dnssec-keys/production.conf"\n')
+	if not testfound:
+		cnf.insert(serversect+1, '\ttrusted-keys-file: "/etc/pki/dnssec-keys/testing.conf"\n')
+	if not harvestfound:
+		cnf.insert(serversect+1, '\ttrusted-keys-file: "/etc/pki/dnssec-keys/harvest.conf"\n')
 	
 	(fptmp,fname) = tempfile.mkstemp(".conf")
 	fpnew = os.fdopen(fptmp, 'w+b')
 	fpnew.write("".join(cnf))
-	# TODO must add/remove trusted-keys sections here.
 	fpnew.close()
 	return UpdateConfigFile(unboundconf,fname)
 
