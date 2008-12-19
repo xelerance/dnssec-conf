@@ -51,6 +51,82 @@ def calcKeyTag(dnskey, flags, protocol, algorithm ):
 		i  += 1
 	return ((ac + (ac >> 16)) & 0xffff)
 
+
+#known to fail, does not use brackets in DNSKEY
+#page = commands.getoutput("curl https://ens.museum/dnssec/Kmuseum.+005+39226.key")
+
+#page = commands.getoutput("curl https://registro.br/ksk/index.html")
+#page = commands.getoutput("curl http://www.iis.se/docs/ksk.txt")
+#page = commands.getoutput("curl http://dnssec.nic.pr/keys/pr.key")
+def grabFromURL(url):
+	if not url
+		return
+	dnskeys = []
+	dnskey = ""
+	trustedkeys = []
+	trustedkey = ""
+	page = commands.getoutput("curl %s"%url)
+	page = re.sub("\t"," ",page)
+	pages = page.split("\n")
+
+	# Try and find trusted-keys first, since its easy and our destination format anyway.
+	# If that fails, hunt for DNSKEY's.
+	for index,line in enumerate(pages):
+		if "trusted-keys {" in line:
+			#print "START_OF_TRUSTEDKEY on line %s:%s"%(index,line)
+			offset = 0
+			while offset < 40:
+				if "}" in pages[index+offset]:
+					trustedkeys.append("".join(pages[index:index+offset+1]))
+					break
+				else:
+					offset += 1
+			continue
+
+		elif "DNSKEY" in line:
+			#print "START_OF_DNSKEY on line %s:%s"%(index,line)
+			# We got the possible start of a dnskey record
+			if "(" in line:
+				offset = 0
+				while offset < 40:
+					if ")" in pages[index+offset]:
+						dnskeys.append("".join(pages[index:index+offset+1]))
+						break
+					else:
+						offset += 1
+				continue
+		
+		else:
+			# junk as far as we're concerned
+			#print "JUNKED:%s"%line
+			continue
+
+	if trustedkeys:
+		for pkey in trustedkeys:
+			pkey = re.sub(" +"," ",pkey)
+			return pkey
+	elif dnskeys:
+		ret = 'trusted-keys {\n'
+		for pkey in dnskeys:
+			pkey = re.sub(" +"," ",pkey)
+			try:
+				if pkey.split()[2] != "IN":
+					# no ttl in record 
+					(zone,intext, dnskeytext,optflags,protocol,algs,keyblob) = pkey.split(" ",6)
+				else:
+					# ttl in record
+					(zone,ttl,intext, dnskeytext,optflags,protocol,algs,keyblob) = pkey.split(" ",7)
+				keyblob = re.sub(" ","", re.sub("\\(", "", re.sub("\\).*$","",keyblob)))
+				if int(optflags)%2 !=0:
+					ret +=  '"%s" %s %s %s "%s";\n'%(zone,optflags,protocol,algs,keyblob)
+				else:
+					#ignore ZSK
+					return
+		return ret += '};\n'
+	else:
+		# Failed to find any key on supplied url
+		return
+
 def main(argv=None):
 	if argv is None:
 		argv = sys.argv
@@ -155,7 +231,8 @@ def getkey(zone,ns):
 			else:
 				print puny
 		for rdata in answers.rrset:
-			if rdata.flags == 257:
+			# check for KSK bit
+			if (int(rdata.flags)%2 !=0:
 				keytag = calcKeyTag(rdata.key,rdata.flags,rdata.protocol,rdata.algorithm)
 				msg =  '"%s" %s %s %s "%s"; // key id = %s'%(zone, rdata.flags,
 					rdata.protocol, rdata.algorithm,
@@ -200,7 +277,7 @@ def getkeys(zone,ns):
 				else:
 					print puny
 			for rdata in answers.rrset:
-				if rdata.flags == 257:
+				if (int(rdata.flags)%2 !=0:
 					msg =  '"%s" %s %s %s "%s";'%(zone, rdata.flags,
 						rdata.protocol, rdata.algorithm,
 						base64.b64encode(rdata.key) )
