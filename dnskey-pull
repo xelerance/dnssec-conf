@@ -28,11 +28,14 @@ except:
 def usage():
 	print "dnskey-pull: Pull DNSKEY records of Key Signing Keys for resolver priming"
 	print "usage: dnskey-pull [-a] [-t] [-o output] [-s <ns>] zone [ zone ...]"
+	print "       dnskey-pull [-o output] url [ url ...]"
+	print ""
 	print "examples:"
 	print "          dnskey-pull -a -s f.root-servers.net . arpa" 
 	print "          dnskey-pull -a -s ns-pri.ripe.net. e164.arpa ." 
 	print "          dnskey-pull -t xelerance.com >> /etc/named.conf" 
 	print "          dnskey-pull xelerance.com"
+	print "          dnskey-pull https://registro.br/ksk/index.html"
         
 	print "          -a = use AXFR to find all NS/DNSKEY records in a zone"
 	print "          -t = Add the 'trusted-keys' wrapper around the keys found"
@@ -59,7 +62,7 @@ def calcKeyTag(dnskey, flags, protocol, algorithm ):
 #page = commands.getoutput("curl http://www.iis.se/docs/ksk.txt")
 #page = commands.getoutput("curl http://dnssec.nic.pr/keys/pr.key")
 def grabFromURL(url):
-	if not url
+	if not url:
 		return
 	dnskeys = []
 	dnskey = ""
@@ -122,7 +125,10 @@ def grabFromURL(url):
 				else:
 					#ignore ZSK
 					return
-		return ret += '};\n'
+			except:
+				return
+		ret += '};\n'
+		return ret
 	else:
 		# Failed to find any key on supplied url
 		return
@@ -190,23 +196,35 @@ def main(argv=None):
 			print "trusted-keys {"
 
 	for zone in args:
-		# fix dots, eg ".arpa" and "arpa" to "arpa."
-		if zone != ".":
-			if zone[-1] != ".":
-				zone = zone + "."
-			if zone[0] == ".":
-				zone = zone[1:]
-			#print "Processing %s"%zone
-		if axfr:
-			getkeys(zone,ns)
+		urlkeys = ""
+		# first check for url
+		if zone[0:8] == "https://" or zone[0:7] == "http://" or zone[0:6] == "ftp://":
+			urlkeys += grabFromURL(zone)
 		else:
-			getkey(zone,ns)
+			# fix dots, eg ".arpa" and "arpa" to "arpa."
+			if zone != ".":
+				if zone[-1] != ".":
+					zone = zone + "."
+				if zone[0] == ".":
+					zone = zone[1:]
+				#print "Processing %s"%zone
+			if axfr:
+				getkeys(zone,ns)
+			else:
+				getkey(zone,ns)
 	if trusted:
 		if outputfp:
 			outputfp.write("};\n\n")
 			outputfp.close()
 		else:
 			print "};"
+	if urlkeys:
+		if outputfp:
+			outputfp.write(urlkeys+"\n")
+			outputfp.close()
+		else:
+			print urlkeys +"\n"
+	
 
 def NSonly(x): return "IN\tNS" in x
 
@@ -232,7 +250,7 @@ def getkey(zone,ns):
 				print puny
 		for rdata in answers.rrset:
 			# check for KSK bit
-			if (int(rdata.flags)%2 !=0:
+			if (int(rdata.flags)%2) !=0:
 				keytag = calcKeyTag(rdata.key,rdata.flags,rdata.protocol,rdata.algorithm)
 				msg =  '"%s" %s %s %s "%s"; // key id = %s'%(zone, rdata.flags,
 					rdata.protocol, rdata.algorithm,
@@ -277,7 +295,7 @@ def getkeys(zone,ns):
 				else:
 					print puny
 			for rdata in answers.rrset:
-				if (int(rdata.flags)%2 !=0:
+				if (int(rdata.flags)%2) !=0:
 					msg =  '"%s" %s %s %s "%s";'%(zone, rdata.flags,
 						rdata.protocol, rdata.algorithm,
 						base64.b64encode(rdata.key) )
