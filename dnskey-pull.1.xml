@@ -12,7 +12,7 @@
 </refmeta>
 <refnamediv id='name'>
 <refname>dnskey-pull</refname>
-<refpurpose> fetch DNSKEY records from a zone or from all sub-zones</refpurpose>
+<refpurpose> fetch DNSKEY records from a zone, from all sub-zones or from a webpage</refpurpose>
 </refnamediv>
 <!-- body begins here -->
 <refsynopsisdiv id='synopsis'>
@@ -23,6 +23,12 @@
     <arg choice='opt'><arg choice='plain'>-o </arg><arg choice='plain'><replaceable>&lt;output&gt;</replaceable></arg></arg>
     <arg choice='opt'><arg choice='plain'>-s </arg><arg choice='plain'><replaceable>&lt;ns&gt;</replaceable></arg></arg>
     <arg choice='plain'><replaceable>zone</replaceable></arg>
+    <arg choice='plain'><replaceable>[..]</replaceable></arg>
+</cmdsynopsis>
+<cmdsynopsis>
+  <command>dnskey-pull</command>    
+    <arg choice='opt'><arg choice='plain'>-o </arg><arg choice='plain'><replaceable>&lt;output&gt;</replaceable></arg></arg>
+    <arg choice='plain'><replaceable>url</replaceable></arg>
     <arg choice='plain'><replaceable>[..]</replaceable></arg>
 </cmdsynopsis>
 </refsynopsisdiv>
@@ -107,6 +113,9 @@ using the F root-server that allows zone-transfers:</para>
 zones:</para>
 
 <para><emphasis remap='B'>% dnskey-pull -a -s ns-pri.ripe.net. e164.arpa.</emphasis></para>
+
+<para>Find the keys on the webpage of the Brasil NIC:</para>
+<para><emphasis remap='B'>% dnskey-pull https://registro.br/ksk/index.html</emphasis></para>
 </refsect1>
 
 <refsect1 id='see_also'><title>SEE ALSO</title>
