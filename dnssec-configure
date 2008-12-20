@@ -461,10 +461,9 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 		cnf.insert(serversect+1, "\tval-permissive-mode: %s"%yesno )
 	if dlvzone:
 		if dlvanchorfile:
-			(head,tail) = cnf[dlvanchorfile].split("dlv-anchor-file")
-			cnf[dlvanchorfile] = '%s dlv-anchor-file: "/etc/pki/dnssec-keys/dlv/%skey"\n'%(re.sub("#","",head),dlvzone)
+			cnf[dlvanchorfile] = '\tdlv-anchor-file: "/etc/pki/dnssec-keys/dlv/%skey"\n'%dlvzone
 		else:
-			cnf.insert(serversect+1, "%sdlv-anchor-file: /etc/pki/dnssec-keys/dlv/%skey"%(head,dlvzone))
+			cnf.insert(serversect+1, "\tdlv-anchor-file: /etc/pki/dnssec-keys/dlv/%skey"%dlvzone)
 
 		if not os.path.isfile("/etc/pki/dnssec-keys/dlv/%skey"%dlvzone):
 			print "warning: /etc/pki/dnssec-keys/dlv/%skey not found. If you trust your network use 'dnskey-pull' to obtain it"%dlvzone
