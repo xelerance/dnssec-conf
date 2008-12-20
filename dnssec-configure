@@ -339,7 +339,9 @@ def BindSetDNSSEC(yesno,dlvzone):
 			startopt = index
 			break
 	if not startopt:
-		sys.exit( "not found options sections")
+		# TODO: write to stderr
+		print "dnssec-configure: Bind: options section not found"
+		return 0
 
 	for index,item in enumerate(cnf[startopt:]):
 		if re.match("^\s*}\s*;\s*\n*$",item):
@@ -347,7 +349,9 @@ def BindSetDNSSEC(yesno,dlvzone):
 			break
 	if not endopt:
 		print cnf[14:]
-		sys.exit( "not found options sections")
+		# TODO: write to stderr
+		print "dnssec-configure: Bind: options section not found"
+		return 0
 
 	optionscfg = cnf[startopt:startopt+endopt+1] 
 
@@ -401,9 +405,11 @@ def BindSetDNSSEC(yesno,dlvzone):
 	return UpdateConfigFile(namedconf,fname)
 
 def UnboundEnableDNSSEC(dlvzone):
+	checkUnboundConfig()
 	return UnboundSetDNSSEC("yes",dlvzone)
 
 def UnboundDisableDNSSEC():
+	checkUnboundConfig()
 	return UnboundSetDNSSEC("no","")
 
 # easiest is to remember is start of server: section
