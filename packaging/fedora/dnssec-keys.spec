@@ -8,6 +8,7 @@ Source: %{name}-%{version}.tar.gz
 Group: System Environment/Daemons
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch: noarch
+Buildrequires: xmlto
 Requires: python-dns
 #Requires: a caching nameserver
 #Requires bind 9.4.0 if bind is reconfigured.....
