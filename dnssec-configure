@@ -79,7 +79,7 @@ def main(argv=None):
 		
 	for o, a in opts:
 		if o in ("-v", "--version"):
-			print "dnssec-configure version 1.0 "
+			print "dnssec-configure version 1.01"
 			print "Author:\n Paul Wouters <paul@xelerance.com>"
 			print "Source : http://www.xelerance.com/software/dnssec-keys/"
 			sys.exit()
@@ -440,9 +440,10 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 			permissive = index
         	if re.match("^\s*#\s*val-permissive-mode\s*:",item):
 			commentpermissive = index
-        	if dlvzone and not dlvanchorfile: 
-			if re.match("^\s*#*\s*dlv-anchor-file\s*:",item):
-				dlvanchorfile = index
+        	if dlvzone:
+			if not dlvanchorfile:
+				if re.match("^\s*#*\s*dlv-anchor-file\s*:",item):
+					dlvanchorfile = index
 		if re.match("^\s*trusted-keys-file:", item):
 			if "/etc/pki/dnssec-keys/production.conf" in item:
 				prodfound = index

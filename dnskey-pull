@@ -107,6 +107,9 @@ def grabFromURL(url):
 	if trustedkeys:
 		for pkey in trustedkeys:
 			pkey = re.sub(" +"," ",pkey)
+			if not "{\n" in pkey:
+				pkey = re.sub("{","{\n",pkey)
+				pkey = re.sub("}","\n}",pkey)
 			return pkey
 	elif dnskeys:
 		ret = 'trusted-keys {\n'
@@ -152,7 +155,7 @@ def main(argv=None):
 	global outputfp
 	for o, a in opts:
 		if o in ("-v", "--version"):
-			print "dnskey-pull version 1.0 "
+			print "dnskey-pull version 1.01 "
 			print "Author:\n Paul Wouters <paul@xelerance.com>"
 			print "Source : http://www.xelerance.com/software/dnssec-keys/"
 			sys.exit()
