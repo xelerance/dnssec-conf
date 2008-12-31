@@ -1,0 +1,7 @@
+
+v1.05
+* Patched unbound, so we no longer need to create *.conf files
+* Removed keepkeyconfs 
+
+v1.04
+* Initial pre-release

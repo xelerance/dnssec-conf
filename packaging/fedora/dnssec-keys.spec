@@ -1,6 +1,6 @@
 Summary: DNSSEC keys for priming recursing nameservers until the root is signed
 Name: dnssec-keys
-Version: 1.04
+Version: 1.05
 Release: 1
 License: GPLv2+
 Url: http://www.xelerance.com/software/dnssec-keys/
@@ -9,7 +9,7 @@ Group: System Environment/Daemons
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch: noarch
 Buildrequires: xmlto
-Requires: python-dns
+Requires: python-dns, curl
 #Requires: a caching nameserver
 #Requires bind 9.4.0 if bind is reconfigured.....
 
@@ -43,7 +43,6 @@ rm -rf ${RPM_BUILD_ROOT}
 %attr(0755,root,root) %dir %{_sysconfdir}/pki/%{name}/testing
 %attr(0755,root,root) %dir %{_sysconfdir}/pki/%{name}/harvest
 %attr(0755,root,root) %dir %{_sysconfdir}/pki/%{name}/dlv
-%attr(0644,root,root) %config(noreplace) %{_sysconfdir}/pki/%{name}/*.conf
 %{_bindir}/dnskey-pull
 %{_sbindir}/dnssec-configure
 %{_mandir}/*/*
