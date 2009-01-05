@@ -1,24 +1,26 @@
-Summary: DNSSEC keys for priming recursing nameservers until the root is signed
-Name: dnssec-keys
-Version: 1.05
+Summary: DNSSEC configuration tool and keys for priming recursing nameservers until the root is signed
+Name: dnssec-conf
+Version: 1.06
 Release: 1
 License: GPLv2+
-Url: http://www.xelerance.com/software/dnssec-keys/
+Url: http://www.xelerance.com/software/dnssec-conf/
 Source: %{name}-%{version}.tar.gz
 Group: System Environment/Daemons
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch: noarch
 Buildrequires: xmlto
-Requires: python-dns, curl
+Requires: python-dns, curl, unbound >= 1.1.1-2
 #Requires: a caching nameserver
 #Requires bind 9.4.0 if bind is reconfigured.....
 
 %description
-DNSSEC keys for priming recursing nameservers until the root is signed. These
-files can be directly included in the bind or unbound nameserver configuration
-files.
-This package includes known keys, URL's to official publication pages
-of keys, and harvested keys, as well a script to harvest DNSKEY's from DNS.
+DNSSEC configuration and priming tool. Keys are required until the root
+is signed, as well as for local unpublished DNSSEC keys to be preloaded
+into the recursive nameserver. These DNSSEC configuration files can be
+directly included in the bind or unbound nameserver configuration files.
+dnssec-conf includes a commandline configuration client for Bind and
+Unbound, known DNSSEC keys, URL's to official publication pages of keys,
+and harvested keys, as well a script to harvest DNSKEY's from DNS.
 
 %prep
 %setup -q -n %{name}-%{version}
@@ -48,6 +50,13 @@ rm -rf ${RPM_BUILD_ROOT}
 %{_mandir}/*/*
 
 %changelog
+* Mon Jan  5 2008 Paul Wouters <paul@xelerance.com> 1.06-1
+- Package renamed to dnssec-conf
+- Added punycode test keys
+- Fix for dnskey-pull and UTF8
+- No longer requires the use of generating .conf files, by using
+  a patch for unbound
+
 * Fri Nov  7 2008 Paul Wouters <paul@xelerance.com> 1.0-1
 - Initial release
 
