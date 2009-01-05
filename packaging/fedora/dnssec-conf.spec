@@ -38,19 +38,19 @@ rm -rf ${RPM_BUILD_ROOT}
 %files 
 %defattr(-,root,root)
 %doc LICENSE README
-%attr(0755,root,root) %dir %{_sysconfdir}/pki/%{name}
-%attr(0644,root,root) %config %{_sysconfdir}/pki/%{name}/*/*
-%attr(0755,root,root) %dir %{_sysconfdir}/pki/%{name}/production
-%attr(0755,root,root) %dir %{_sysconfdir}/pki/%{name}/production/reverse
-%attr(0755,root,root) %dir %{_sysconfdir}/pki/%{name}/testing
-%attr(0755,root,root) %dir %{_sysconfdir}/pki/%{name}/harvest
-%attr(0755,root,root) %dir %{_sysconfdir}/pki/%{name}/dlv
+%attr(0755,root,root) %dir %{_sysconfdir}/pki/dnssec-keys
+%attr(0644,root,root) %config %{_sysconfdir}/pki/dnssec-keys/*/*
+%attr(0755,root,root) %dir %{_sysconfdir}/pki/dnssec-keys/production
+%attr(0755,root,root) %dir %{_sysconfdir}/pki/dnssec-keys/production/reverse
+%attr(0755,root,root) %dir %{_sysconfdir}/pki/dnssec-keys/testing
+%attr(0755,root,root) %dir %{_sysconfdir}/pki/dnssec-keys/harvest
+%attr(0755,root,root) %dir %{_sysconfdir}/pki/dnssec-keys/dlv
 %{_bindir}/dnskey-pull
 %{_sbindir}/dnssec-configure
 %{_mandir}/*/*
 
 %changelog
-* Mon Jan  5 2008 Paul Wouters <paul@xelerance.com> 1.06-1
+* Mon Jan  5 2009 Paul Wouters <paul@xelerance.com> 1.06-1
 - Package renamed to dnssec-conf
 - Added punycode test keys
 - Fix for dnskey-pull and UTF8
