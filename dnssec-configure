@@ -1,6 +1,7 @@
 #!/usr/bin/python
 #
 # (C)opyright Xelerance 2007 2008, Paul Wouters <paul@xelerance.com>
+# License: GPLv2
 #
 # TODO: allow specifying location of conf files
 # TODO: make work on debian/ubuntu (different way of starting services)
@@ -344,7 +345,7 @@ def BindSetDNSSEC(yesno,dlvzone):
 	prodfound = 0
 	testfound = 0
 	harvestfound = 0
-	kincludefound = 0
+	
 	for index,item in enumerate(optionscfg):
 		# change entry if there
 		if "dnssec-enable" in item:
@@ -363,9 +364,6 @@ def BindSetDNSSEC(yesno,dlvzone):
 				optionscfg[index] = "\t// dnssec-lookaside%s"%vals
 			else:
 				optionscfg[index] = "\tdnssec-lookaside . trust-anchor " + dlvzone + ";\n"
-		if "/etc/named.dnssec.keys" in item:
-			kincludefound = 1
-		
 
 	# add entry for unfound settings
 	if not enablefound:
@@ -381,7 +379,7 @@ def BindSetDNSSEC(yesno,dlvzone):
 		if not os.path.isfile("/etc/pki/dnssec-keys/dlv/%sconf"%dlvzone):
 			print "warning: /etc/pki/dnssec-keys/dlv/%sconf not found. If you trust your network use:"%dlvzone
 			print "         dnskey-pull -t -o /etc/pki/dnssec-keys/dlv/%sconf %s' to obtain it"%(dlvzone,dlvzone)
-	if not kincludefound:
+	if not 'include "/etc/named.dnssec.keys";' in "".join(cnf):
 		cnf = cnf + ['include "/etc/named.dnssec.keys";\n']
 			
 
@@ -403,6 +401,7 @@ def BindSetDNSSEC(yesno,dlvzone):
 	if todo:
 		for entry in todo:
 			filelist = os.listdir("/etc/pki/dnssec-keys/%s"%entry)
+			filelist.sort()
 			for line in filelist:
 				if line[-5:] == ".conf":
 					fpkeys.write('include "/etc/pki/dnssec-keys/%s/%s";\n'%(entry,line))
