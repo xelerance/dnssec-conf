@@ -246,9 +246,10 @@ def getkey(zone,ns):
 	if answers:
 		if zone.lower()[0:4] == "xn--":
 			errors = ""
-			puny = "//; %s"% encodings.punycode.punycode_decode(zone[4:],errors)
+			puny = "//; %s\n"% encodings.punycode.punycode_decode(zone[4:],errors)
+			punyutf8 = puny.encode("utf8")
 			if outputfp:
-				outputfp.write(puny)
+				outputfp.write(punyutf8)
 			else:
 				print puny
 		for rdata in answers.rrset:
