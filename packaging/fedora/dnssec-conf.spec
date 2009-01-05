@@ -51,6 +51,9 @@ rm -rf ${RPM_BUILD_ROOT}
 %{_mandir}/*/*
 
 %changelog
+* Mon Jan  5 2009 Paul Wouters <paul@xelerance.com> 1.08-1
+- Upgrade to 'upstream'
+
 * Mon Jan  5 2009 Paul Wouters <paul@xelerance.com> 1.07-1
 - Require unbound >= 1.1.1-7
 
