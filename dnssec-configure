@@ -333,6 +333,7 @@ def BindSetDNSSEC(yesno,dlvzone):
 	prodfound = 0
 	testfound = 0
 	harvestfound = 0
+	kincludefound = 0
 	for index,item in enumerate(optionscfg):
 		# change entry if there
 		if "dnssec-enable" in item:
@@ -351,6 +352,9 @@ def BindSetDNSSEC(yesno,dlvzone):
 				optionscfg[index] = "\t// dnssec-lookaside%s"%vals
 			else:
 				optionscfg[index] = "\tdnssec-lookaside . trust-anchor " + dlvzone + ";\n"
+		if "/etc/named.dnssec.keys" in item:
+			kincludefound = 1
+		
 
 	# add entry for unfound settings
 	if not enablefound:
@@ -366,14 +370,27 @@ def BindSetDNSSEC(yesno,dlvzone):
 		if not os.path.isfile("/etc/pki/dnssec-keys/dlv/%sconf"%dlvzone):
 			print "warning: /etc/pki/dnssec-keys/dlv/%sconf not found. If you trust your network use:"%dlvzone
 			print "         dnskey-pull -t -o /etc/pki/dnssec-keys/dlv/%sconf %s' to obtain it"%(dlvzone,dlvzone)
+	if not kincludefound:
+		print "ERROR IN CNF LINE?"
+		cnf = cnf + ['include "/etc/named.dnssec.keys";\n']
+			
 
 	(fptmp,fname) = tempfile.mkstemp(".conf")
 	fpnew = os.fdopen(fptmp, 'w+b')
 	fpnew.write("".join(cnf[0:startopt]))
 	fpnew.write("".join(optionscfg))
 	fpnew.write("".join(cnf[(startopt+endopt+1):]))
-	# TODO must add/remove trusted-keys sections here.
 	fpnew.close()
+	# before activating new config, rebuild the /etc/named.dnssec.keys file as named also does not support wildcards for includes
+	fpkeys = open("/etc/named.dnssec.keys","w")
+	# XXX bug: we need to pass production/testing/harvest info
+	for entry in [ "production","testing","harvest"]:
+		filelist = os.listdir("/etc/pki/dnssec-keys/%s"%entry)
+		for line in filelist:
+			if line[-5:] == ".conf":
+				fpkeys.write('include "/etc/pki/dnssec-keys/%s/%s";\n'%(entry,line))
+	fpkeys.close()
+
 	return UpdateConfigFile(namedconf,fname)
 
 def UnboundEnableDNSSEC(dlvzone):
@@ -445,6 +462,7 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 			print "warning: /etc/pki/dnssec-keys/dlv/%skey not found. If you trust your network run 'dnskey-pull' to obtain it"%dlvzone
 
 	# add potential missing lines to include trusted-keys-file 
+	# XXX Bug in that --production etc flags are not honoured
 	if not prodfound:
 		cnf.insert(serversect+1, '\ttrusted-keys-file: "/etc/pki/dnssec-keys/production/*.conf"\n')
 	if not revfound:
