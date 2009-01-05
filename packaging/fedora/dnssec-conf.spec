@@ -1,6 +1,6 @@
 Summary: DNSSEC configuration tool and keys for priming recursing nameservers until the root is signed
 Name: dnssec-conf
-Version: 1.07
+Version: 1.08
 Release: 1
 License: GPLv2+
 Url: http://www.xelerance.com/software/dnssec-conf/
