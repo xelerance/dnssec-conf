@@ -1,0 +1,8 @@
+//; https://ns.iana.org/dnssec/status.html
+//; These can only be used when using ns.iana.org as resolver
+trusted-keys {
+//; key id = 7397
+"int." 257 3 5 "AwEAAaPm14CKGvm83ViBXLjfoEa6zEyvs+24HhmoUgdLNj4VSdpK/I1tNzHgeoRxNsm7M4sda8ILRYSCJQDjFNds8nefYTMgdO6ErSXv3HwlUN7Fs9Lff37VQZGT/Z86OawYE6J+Jc4jcCX58fsyi/yTGLAf67Dl8Nxj2Ul1meI068fb0mmEoQU9ZrOvGEPL0Ywlmvd8RQW3Y5hnn+0yz63eq5LjNzVjd2CLGSTGtVWPAKhaEiYZA3G3FGmUMRUZMRlQlCHvY6hStD5zxJ5yz9MvV2W8FLXrYj6ct2HGu6+epwb4iB0Haaj2A/Vkz4hwjy69dc7e0nmC//YxTKePFKrtvh0=";
+//; key id = 52184
+"int." 257 3 5 "AwEAAcnQ6DH2j/l6DcspaRzpe1QeuczaF0dtYTX+Ztv1FQh+k4DmRkmCUFh7v+FT9/U9gjaNS7aP4zN+XyKZu+ee4NEoAWmqnTU3YQUMUbnMZNGxZ7EoSZPjKxIlCp+pp2OTznPqy+Es/+5N+kG0h09ZqoXMOGohG72PrA1R2P214dnnHrzyGSSrVm/itZ1NUE8eq9j0b3ugp+1yh0EelxTh8oMJCvquYivgVfZiimLTqgoIuAkJyDbfWOUeGPX/cftJSxiw1B0xiMOSCZzyb2SJ9uqNsdkSRm2i7hFOOP3yUpT7uihP0U4WvAW20Z/rS1xHAl4+C6XicF1cdpFjD2ULkOE=";
+};
