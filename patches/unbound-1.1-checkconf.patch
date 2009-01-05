@@ -1,0 +1,15 @@
+Index: smallapp/unbound-checkconf.c
+===================================================================
+--- smallapp/unbound-checkconf.c	(revision 1404)
++++ smallapp/unbound-checkconf.c	(working copy)
+@@ -258,7 +258,9 @@
+ {
+ 	struct config_strlist* p;
+ 	for(p=list; p; p=p->next) {
+-		check_chroot_string(desc, &p->str, chrootdir, cfg);
++		/* skip wildcard checks, may fail */
++		if(strstr(p->str,"*") == NULL)
++		     check_chroot_string(desc, &p->str, chrootdir, cfg);
+ 	}
+ }
+ 
