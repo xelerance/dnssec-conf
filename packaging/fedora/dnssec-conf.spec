@@ -10,6 +10,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch: noarch
 Buildrequires: xmlto
 Requires: python-dns, curl, unbound >= 1.1.1-2
+Obsoletes: dnssec-keys <= 1.06-1
 #Requires: a caching nameserver
 #Requires bind 9.4.0 if bind is reconfigured.....
 
