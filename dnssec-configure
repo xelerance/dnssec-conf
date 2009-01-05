@@ -227,7 +227,7 @@ def main(argv=None):
 
 
 def restartDaemon(daemon):
-	(status, output) = commands.getstatusoutput("/sbin/service %s restart"%daemon)
+	(status, output) = commands.getstatusoutput("/sbin/service %s try-restart"%daemon)
         if status:
                 print "ERROR:\n%s"%output
 
