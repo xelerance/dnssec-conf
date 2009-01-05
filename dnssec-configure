@@ -5,7 +5,6 @@
 # TODO: allow specifying location of conf files
 # TODO: make work on debian/ubuntu (different way of starting services)
 # TODO: configurable path for /etc/pki/dnssec-keys/
-# TODO: add the proper production/testing/harvest conf files as include statements to bind/unbound
 
 import commands
 import re
@@ -21,6 +20,12 @@ global unboundconf
 unboundconf = "/etc/unbound/unbound.conf"
 global bversion
 bversion = "unknown"
+global production
+production = 0
+global testing
+testing = 0
+global harvest
+harvest = 0
 
 def usage():
 	print "dnssec-configure: (re)configure the Bind and/or Unbound for DNSSEC and DLV"
@@ -42,6 +47,9 @@ def usage():
 	print "   --root            load root key into configuration [not yet implemented]"
 
 def main(argv=None):
+	global production
+	global testing
+	global harvest
 #	if commands.getoutput( "whoami" ) != "root":
 #		sys.exit("root permission is required  to write config files"
 
@@ -64,10 +72,10 @@ def main(argv=None):
 	unbound = 0
 	dnssec = -1
 	dlv = -1
-	production = ""
-	testing = ""
-	harvest = ""
-	root = ""
+	production = 0
+	testing = 0
+	harvest = 0
+	root = 0
 	restartBind = 0
 	restartUnbound = 0
 	if not opts:
@@ -298,6 +306,9 @@ def BindDisableDNSSEC():
 def BindSetDNSSEC(yesno,dlvzone):
 	global namedconf
 	global bversion
+	global production
+	global testing
+	global harvest
 	fp = open(namedconf)
 	cnf = fp.readlines()
 	fp.close()
@@ -371,7 +382,6 @@ def BindSetDNSSEC(yesno,dlvzone):
 			print "warning: /etc/pki/dnssec-keys/dlv/%sconf not found. If you trust your network use:"%dlvzone
 			print "         dnskey-pull -t -o /etc/pki/dnssec-keys/dlv/%sconf %s' to obtain it"%(dlvzone,dlvzone)
 	if not kincludefound:
-		print "ERROR IN CNF LINE?"
 		cnf = cnf + ['include "/etc/named.dnssec.keys";\n']
 			
 
@@ -383,14 +393,22 @@ def BindSetDNSSEC(yesno,dlvzone):
 	fpnew.close()
 	# before activating new config, rebuild the /etc/named.dnssec.keys file as named also does not support wildcards for includes
 	fpkeys = open("/etc/named.dnssec.keys","w")
-	# XXX bug: we need to pass production/testing/harvest info
-	for entry in [ "production","testing","harvest"]:
-		filelist = os.listdir("/etc/pki/dnssec-keys/%s"%entry)
-		for line in filelist:
-			if line[-5:] == ".conf":
-				fpkeys.write('include "/etc/pki/dnssec-keys/%s/%s";\n'%(entry,line))
+	todo = []
+	if production:
+		todo += [ "production"]
+	if testing:
+		todo += [ "testing"]
+	if harvest:
+		todo += [ "harvest"]
+	if todo:
+		for entry in todo:
+			filelist = os.listdir("/etc/pki/dnssec-keys/%s"%entry)
+			for line in filelist:
+				if line[-5:] == ".conf":
+					fpkeys.write('include "/etc/pki/dnssec-keys/%s/%s";\n'%(entry,line))
+	else:
+		fpkeys.write("// dnssec-configure: no keys selected, this should not happen\n")
 	fpkeys.close()
-
 	return UpdateConfigFile(namedconf,fname)
 
 def UnboundEnableDNSSEC(dlvzone):
@@ -405,6 +423,9 @@ def UnboundDisableDNSSEC():
 #val-permissive-mode: yes
 def UnboundSetDNSSEC(yesno,dlvzone):
 	global unboundconf
+	global production
+	global testing
+	global harvest
 	fp = open(unboundconf)
 	cnf = fp.readlines()
 	fp.close()
@@ -437,12 +458,20 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 		if re.match("^\s*trusted-keys-file:", item):
 			if "/etc/pki/dnssec-keys/production/*.conf" in item:
 				prodfound = index
+				if not production:
+					cnf[index] = [ '\t#trusted-keys-file: "/etc/pki/dnssec-keys/production/*.conf"\n']
 			elif "/etc/pki/dnssec-keys/production/reverse/*.conf" in item:
 				revfound = index
+				if not production:
+					cnf[index] = [ '\t#trusted-keys-file: "/etc/pki/dnssec-keys/reverse/*.conf"\n']
 			elif "/etc/pki/dnssec-keys/testing/*.conf" in item:
 				testfound = index
+				if not testing:
+					cnf[index] = [ '\t#trusted-keys-file: "/etc/pki/dnssec-keys/testing/*.conf"\n']
 			elif "/etc/pki/dnssec-keys/harvest/*.conf" in item:
 				harvestfound = index
+				if not harvest:
+					cnf[index] = [ '\t#trusted-keys-file: "/etc/pki/dnssec-keys/harvest/*.conf"\n']
 
 	if permissive:
 		(head,tail) = cnf[permissive].split("val-permissive-mode")
@@ -462,14 +491,13 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 			print "warning: /etc/pki/dnssec-keys/dlv/%skey not found. If you trust your network run 'dnskey-pull' to obtain it"%dlvzone
 
 	# add potential missing lines to include trusted-keys-file 
-	# XXX Bug in that --production etc flags are not honoured
-	if not prodfound:
+	if not prodfound and production:
 		cnf.insert(serversect+1, '\ttrusted-keys-file: "/etc/pki/dnssec-keys/production/*.conf"\n')
-	if not revfound:
+	if not revfound and production:
 		cnf.insert(serversect+1, '\ttrusted-keys-file: "/etc/pki/dnssec-keys/production/reverse/*.conf"\n')
-	if not testfound:
+	if not testfound and testing:
 		cnf.insert(serversect+1, '\ttrusted-keys-file: "/etc/pki/dnssec-keys/testing/*.conf"\n')
-	if not harvestfound:
+	if not harvestfound and harvest:
 		cnf.insert(serversect+1, '\ttrusted-keys-file: "/etc/pki/dnssec-keys/harvest/*.conf"\n')
 	
 	(fptmp,fname) = tempfile.mkstemp(".conf")
