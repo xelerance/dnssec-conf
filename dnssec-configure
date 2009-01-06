@@ -202,13 +202,13 @@ def main(argv=None):
 				if dlvzone[0] == ".":
 					dlvzone = dlvzone[1:]
 
-		print "Enabling DNSSEC for: %s"%software
+		#print "Enabling DNSSEC for: %s"%software
 		if bind:
 			restartBind = BindEnableDNSSEC(dlvzone)
 		if unbound:
 			restartUnbound = UnboundEnableDNSSEC(dlvzone)
 	else:
-		print "Disabling DNSSEC for: %s"%software
+		#print "Disabling DNSSEC for: %s"%software
 		if bind:
 			restartBind = BindDisableDNSSEC()
 		if unbound:
@@ -450,27 +450,30 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 			permissive = index
         	if re.match("^\s*#\s*val-permissive-mode\s*:",item):
 			commentpermissive = index
-        	if dlvzone:
-			if not dlvanchorfile:
-				if re.match("^\s*#*\s*dlv-anchor-file\s*:",item):
-					dlvanchorfile = index
+		if re.match("^\s*#*\s*dlv-anchor-file\s*:",item):
+			if not dlvzone:
+				# comment out if not a comment
+				if not re.match("^\s*#.*",item):
+					cnf[index] = "\t#"
+			else:
+				dlvanchorfile = index
 		if re.match("^\s*trusted-keys-file:", item):
 			if "/etc/pki/dnssec-keys/production/*.conf" in item:
 				prodfound = index
 				if not production:
-					cnf[index] = [ '\t#trusted-keys-file: "/etc/pki/dnssec-keys/production/*.conf"\n']
+					cnf[index] =  '\t# trusted-keys-file: "/etc/pki/dnssec-keys/production/*.conf"\n'
 			elif "/etc/pki/dnssec-keys/production/reverse/*.conf" in item:
 				revfound = index
 				if not production:
-					cnf[index] = [ '\t#trusted-keys-file: "/etc/pki/dnssec-keys/reverse/*.conf"\n']
+					cnf[index] =  '\t# trusted-keys-file: "/etc/pki/dnssec-keys/reverse/*.conf"\n'
 			elif "/etc/pki/dnssec-keys/testing/*.conf" in item:
 				testfound = index
 				if not testing:
-					cnf[index] = [ '\t#trusted-keys-file: "/etc/pki/dnssec-keys/testing/*.conf"\n']
+					cnf[index] =  '\t# trusted-keys-file: "/etc/pki/dnssec-keys/testing/*.conf"\n'
 			elif "/etc/pki/dnssec-keys/harvest/*.conf" in item:
 				harvestfound = index
 				if not harvest:
-					cnf[index] = [ '\t#trusted-keys-file: "/etc/pki/dnssec-keys/harvest/*.conf"\n']
+					cnf[index] =  '\t# trusted-keys-file: "/etc/pki/dnssec-keys/harvest/*.conf"\n'
 
 	if permissive:
 		(head,tail) = cnf[permissive].split("val-permissive-mode")
@@ -488,6 +491,9 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 
 		if not os.path.isfile("/etc/pki/dnssec-keys/dlv/%skey"%dlvzone):
 			print "warning: /etc/pki/dnssec-keys/dlv/%skey not found. If you trust your network run 'dnskey-pull' to obtain it"%dlvzone
+	else:
+		if dlvanchorfile:
+			cnf[dlvanchorfile] = '\t# dlv-anchor-file: "/etc/pki/dnssec-keys/dlv/%skey"\n'%dlvzone
 
 	# add potential missing lines to include trusted-keys-file 
 	if not prodfound and production:
@@ -501,7 +507,11 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 	
 	(fptmp,fname) = tempfile.mkstemp(".conf")
 	fpnew = os.fdopen(fptmp, 'w+b')
-	fpnew.write("".join(cnf))
+	try:
+		fpnew.write("".join(cnf))
+	except:
+		print "BROKE"
+		print cnf
 	fpnew.close()
 	return UpdateConfigFile(unboundconf,fname)
 
