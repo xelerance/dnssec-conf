@@ -1,4 +1,4 @@
-Summary: DNSSEC configuration tool and keys for priming recursing nameservers until the root is signed
+Summary: DNSSEC and DLV configuration tool (and TLD repository until the root is signed)
 Name: dnssec-conf
 Version: 1.08
 Release: 1
@@ -10,7 +10,6 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch: noarch
 Buildrequires: xmlto
 Requires: python-dns, curl, unbound >= 1.1.1-7
-Obsoletes: dnssec-keys <= 1.06-1
 #Requires: a caching nameserver
 #Requires bind 9.4.0 if bind is reconfigured.....
 
@@ -40,7 +39,7 @@ rm -rf ${RPM_BUILD_ROOT}
 %defattr(-,root,root)
 %doc LICENSE README
 %attr(0755,root,root) %dir %{_sysconfdir}/pki/dnssec-keys
-%attr(0644,root,root) %config %{_sysconfdir}/pki/dnssec-keys/*/*
+%attr(0644,root,root) %config(noreplace) %{_sysconfdir}/pki/dnssec-keys/*/*
 %attr(0755,root,root) %dir %{_sysconfdir}/pki/dnssec-keys/production
 %attr(0755,root,root) %dir %{_sysconfdir}/pki/dnssec-keys/production/reverse
 %attr(0755,root,root) %dir %{_sysconfdir}/pki/dnssec-keys/testing
