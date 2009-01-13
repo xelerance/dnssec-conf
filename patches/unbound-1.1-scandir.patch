@@ -1,0 +1,73 @@
+Index: validator/val_anchor.c
+===================================================================
+--- validator/val_anchor.c	(revision 1404)
++++ validator/val_anchor.c	(working copy)
+@@ -47,6 +47,11 @@
+ #include "util/regional.h"
+ #include "util/config_file.h"
+ 
++#include <dirent.h>
++#include <libgen.h>
++#include <fnmatch.h>
++
++
+ int
+ anchor_cmp(const void* k1, const void* k2)
+ {
+@@ -627,9 +633,53 @@
+ 	FILE* in = fopen(fname, "r");
+ 	int rdlen = 0;
+ 	if(!in) {
+-		log_err("error opening file %s: %s", fname, strerror(errno));
+-		return 0;
+-	}
++		if(strstr(fname,"*")!=NULL) {
++			struct dirent **namelist;
++			char *fnameb = strdup(fname);
++			char *fnamef = strdup(fname);
++			char *dbase, *globmatch;
++			dbase = dirname(fnameb);
++			globmatch = basename(fnamef);
++			int n;
++			verbose(VERB_QUERY, "wildcard found, processing directory");
++			n = scandir(dbase,&namelist, 0, 0);
++			if (n<0) {
++				log_err("error opening wildcard in dir: %s:", dbase);
++				free(namelist);
++				free(dbase);
++				free(fnameb);
++				free(fnamef);
++				free(globmatch);
++				return 0;
++			}
++			else {
++				while(n--) {
++					if (namelist[n]->d_type != DT_DIR) {
++						if(!fnmatch(globmatch,namelist[n]->d_name,0)) {
++							// log_err( "file %s matched pattern %s - loading", namelist[n]->d_name, globmatch);
++							char *newname = malloc(strlen(namelist[n]->d_name) + strlen(dbase) + strlen("/") + 1);
++							strcpy(newname, dbase);
++							strcat(newname,"/");
++							strcat(newname, namelist[n]->d_name);
++							if(!anchor_read_bind_file(anchors, buffer,newname)) {
++                        					log_err("error reading wildcard trusted-keys-file: %s", newname);
++                					}
++							free(newname);
++						} else {
++							// log_err("file %s did not match pattern %s", namelist[n]->d_name, globmatch);
++						}
++					}
++					free(namelist[n]);
++				}
++				free(namelist);
++				free(dbase);
++				// causes segfault free(fnameb);
++				free(fnamef);
++				// causes segfault  free(globmatch);
++			     }
++			return 1;
++			}
++	         }
+ 	verbose(VERB_QUERY, "reading in bind-compat-mode: '%s'", fname);
+ 	/* scan for  trusted-keys  keyword, ignore everything else */
+ 	ldns_buffer_clear(buffer);

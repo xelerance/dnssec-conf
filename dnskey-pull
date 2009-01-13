@@ -107,6 +107,9 @@ def grabFromURL(url):
 	if trustedkeys:
 		for pkey in trustedkeys:
 			pkey = re.sub(" +"," ",pkey)
+			if not "{\n" in pkey:
+				pkey = re.sub("{","{\n",pkey)
+				pkey = re.sub("}","\n}",pkey)
 			return pkey
 	elif dnskeys:
 		ret = 'trusted-keys {\n'
@@ -152,7 +155,7 @@ def main(argv=None):
 	global outputfp
 	for o, a in opts:
 		if o in ("-v", "--version"):
-			print "dnskey-pull version 1.0 "
+			print "dnskey-pull version 1.08 "
 			print "Author:\n Paul Wouters <paul@xelerance.com>"
 			print "Source : http://www.xelerance.com/software/dnssec-keys/"
 			sys.exit()
@@ -243,9 +246,10 @@ def getkey(zone,ns):
 	if answers:
 		if zone.lower()[0:4] == "xn--":
 			errors = ""
-			puny = "//; %s"% encodings.punycode.punycode_decode(zone[4:],errors)
+			puny = "//; %s\n"% encodings.punycode.punycode_decode(zone[4:],errors)
+			punyutf8 = puny.encode("utf8")
 			if outputfp:
-				outputfp.write(puny)
+				outputfp.write(punyutf8)
 			else:
 				print puny
 		for rdata in answers.rrset:
@@ -256,7 +260,7 @@ def getkey(zone,ns):
 					rdata.protocol, rdata.algorithm,
 					base64.b64encode(rdata.key), keytag )
 				if outputfp:
-					outputfp.write(msg)
+					outputfp.write(msg+"\n")
 				else:
 					print msg
 		if outputfp:
@@ -300,7 +304,7 @@ def getkeys(zone,ns):
 						rdata.protocol, rdata.algorithm,
 						base64.b64encode(rdata.key) )
 					if outputfp:
-						outputfp.write(msg)
+						outputfp.write(msg+"\n")
 					else:
 						print msg
 				if outputfp:
