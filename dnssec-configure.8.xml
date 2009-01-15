@@ -46,10 +46,15 @@
     <arg choice='opt'>--harvest </arg>
     <arg choice='opt'>--root </arg>
 </cmdsynopsis>
+<cmdsynopsis>
+  <command>dnssec-configure</command>    <arg choice='plain'>--show </arg>
+    <arg choice='opt'>-u </arg>
+    <arg choice='opt'>-b </arg>
+</cmdsynopsis>
 </refsynopsisdiv>
 
 <refsect1 id='description'><title>DESCRIPTION</title>
-<para>dnssec-configure rewrites the configuration files of the
+<para>dnssec-configure shows or rewrites the configuration files of the
 <emphasis remap='I'>Bind (named)</emphasis> and/or the
 <emphasis remap='I'>Unbound</emphasis> nameservers. It verifies the
 configuration before rewriting it, and restarts the nameserver(s) if
@@ -74,9 +79,21 @@ neccessary.</para>
   </listitem>
   </varlistentry>
 </variablelist>
+
 <para>If neither options are specified, <emphasis remap='I'>-b -u</emphasis>
 is assumed.</para>
+
 <variablelist>
+  <varlistentry>
+  <term><option>--show</option></term>
+  <listitem>
+<para>
+Show the current configuration(s) and do not rewrite any configuration files. All
+other options below are ignored.
+</para>
+  </listitem>
+  </varlistentry>
+
   <varlistentry>
   <term><option>--dnssec=</option>&lt;on|off>&gt;</term>
   <listitem>

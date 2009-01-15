@@ -36,9 +36,11 @@ def usage():
 	print "   dnssec-configure -u -b --dnssec=on --dlv=dlv.isc.org --production"
 	print "   dnssec-configure --dnssec=on --dlv=on --production --testing --harvest"
 	print "   dnssec-configure --dnssec=off --dlv=off"
+	print "   dnssec-configure -s [-u] [-b]"
         print ""
 	print "   -b or -n          (re)configure the Bind nameserver (default yes if found)"
 	print "   -u                (re)configure the Unbound nameserver (default yes if found)"
+	print "   -s                show current configuration(s)"
 	print "   --dnssec= <on|of>  enable or disable DNSSEC"
 	print "   --dlv= <off|on|dlvname> enable or disable DLV"
 	print "          (default dlv as specified with 'on' is dlv.isc.org)" 
@@ -58,7 +60,7 @@ def main(argv=None):
 	if argv is None:
 		argv = sys.argv
 	try:
-		opts, args = getopt.getopt(argv[1:], "bnuvh1:2:3:4567", ["bind","named", "unbound", "version","help","dnssec=","dlv=","basedir=","production","testing","harvest","root"])
+		opts, args = getopt.getopt(argv[1:], "sbnuvh1:2:3:4567", ["show","bind","named", "unbound", "version","help","dnssec=","dlv=","basedir=","production","testing","harvest","root"])
 	except getopt.error, msg:
 		#print >>sys.stderr, err.msg
 		print >>sys.stderr, "ERROR parsing options"
@@ -78,6 +80,7 @@ def main(argv=None):
 	testing = 0
 	harvest = 0
 	root = 0
+	show = 0
 	restartBind = 0
 	restartUnbound = 0
 	if not opts:
@@ -98,6 +101,8 @@ def main(argv=None):
 			bind = 1
 		if o in ("-u","--unbound"):
 			unbound = 1
+		if o in ("-s","--show"):
+			show = 1
 		if o in ("-3","--basedir"):
 			if not a:
 				print "error: basedir requires argument"
@@ -146,6 +151,13 @@ def main(argv=None):
 		bind = 1
 		unbound = 1
 
+	# is show, just show current config and quit
+	if show:
+		if bind:
+			showCurrentConfig("bind")
+		if unbound:
+			showCurrentConfig("unbound")
+		sys.exit()
 
 	# check write perms
 	if bind:
@@ -515,6 +527,68 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 		print cnf
 	fpnew.close()
 	return UpdateConfigFile(unboundconf,fname)
+
+# show current dnssec and dlv status. returns enabled/disabled for DNSSEC and the the dlv zone or disabled for DLV.
+def showCurrentConfig(nstype):
+	dnssecStatus = "unknown"
+	# if dlv keyword not  present in config, it means disabled
+	dlvStatus    = "disabled"
+
+	# check if valid config first, then we can assume certain things
+	checkUnboundConfig()
+
+	if nstype == "unbound":
+		fp = open(unboundconf)
+		cnf = fp.readlines()
+		fp.close()
+		for line in cnf:
+			if re.match("^\s*val-permissive-mode\s*:",line):
+				if "yes" in line.split(":")[1]:
+					dnssecStatus = "disabled"
+				else:
+					dnssecStatus = "enabled"
+			if re.match("^\s*dlv-anchor-file\s*:",line):
+					dlvfile = re.sub('"','', line.split(":")[1].strip())
+					try:
+						dlvfp = open(dlvfile)
+						lines = dlvfp.readlines()
+						dlvfp.close()
+					except:
+						dlvStatus = "unknown"
+					for entry in lines:
+						if entry.strip()[0] == ';':
+							continue
+						# first non comment line is our dlv line. first word is zone name
+						else:
+							try:
+								dlvStatus = entry.strip().split(" ",1)[0]
+							except:
+								dlvStatus = "unknown"
+		print "Unbound DNSSEC:%s"%dnssecStatus
+		print "Unbound DLV:%s"%dlvStatus
+
+	elif nstype =="bind":
+		fp = open(namedconf)
+		cnf = fp.readlines()
+		fp.close()
+		for line in cnf:
+			if re.match("^\s*dnssec-validation\s*",line):
+				if "yes" in line.split("dnssec-validation")[1]:
+					dnssecStatus = "enabled"
+				else:
+					dnssecStatus = "disabled"
+			if re.match("^\s*dnssec-lookaside\s*",line):
+					try:
+						dlvStatus = re.sub(";","", line.split("trust-anchor")[1].strip())
+					except:
+						dlvStatus = "unknown"
+		print "Bind DNSSEC:%s"%dnssecStatus
+		print "Bind DLV:%s"%dlvStatus
+
+	else:
+		usage()
+		sys.exit()
+
 
 if __name__ == "__main__":
 	sys.exit(main())
