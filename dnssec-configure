@@ -589,6 +589,47 @@ def showCurrentConfig(nstype):
 		usage()
 		sys.exit()
 
+def UnboundSetOption(section,optname,optvalue):
+	global unboundconf
+
+	if section not in [ "remote-control","server" ]:
+		return
+
+	fp = open(unboundconf)
+	cnf = fp.readlines()
+	fp.close()
+
+	# first try if we find the option, if not add to start of section
+	sect = 0
+	option = 0
+	commentoption = 0
+	for index, item in enumerate(cnf):
+        	if re.match("^\s*%s:\s*"%section,item):
+			sect = index
+        	if re.match("^\s*%s\s*:"%optname,item):
+			option = index
+        	if re.match("^\s*#\s*%s\s*:"%optname,item):
+			commentoption = index
+
+	if option:
+		(head,tail) = cnf[option].split(optname)
+		cnf[option] = "%s%s: %s\n"%(head,optname,optvalue)
+	elif commentoption:
+		(head,tail) = cnf[commentoption].split("#",1)
+		cnf[commentoption] = "%s%s: %s\n"%(re.sub("#","",head),optname,optvalue)
+	else:
+		cnf.insert(sect+1, "\t%s: %s"%(optname,optvalue) )
+
+	(fptmp,fname) = tempfile.mkstemp(".conf")
+	fpnew = os.fdopen(fptmp, 'w+b')
+	try:
+		fpnew.write("".join(cnf))
+	except:
+		print "BROKE"
+		print cnf
+	fpnew.close()
+	return UpdateConfigFile(unboundconf,fname)
+
 
 if __name__ == "__main__":
 	sys.exit(main())
