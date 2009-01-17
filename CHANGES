@@ -1,7 +1,9 @@
 v1.10
 - Added --set, --query, and show options to dnssec-configure
+- Removed testing key for gr. - it vanished again.
 
 v1.09
+- Added testing key for gr.
 
 v1.08
 - Fix Bind to generate and include the key files

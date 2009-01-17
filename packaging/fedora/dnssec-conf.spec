@@ -50,6 +50,9 @@ rm -rf ${RPM_BUILD_ROOT}
 %{_mandir}/*/*
 
 %changelog
+* Sat Jan 17 2009 Paul Wouters <paul@xelerance.com> - 1.10-1
+- Updated to 1.10. Adds --set and --query and show option to use with system-config-dnssec
+
 * Tue Jan 13 2009 Paul Wouters <paul@xelerance.com> - 1.09-1
 - Added testing key for gr.
 
