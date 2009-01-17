@@ -99,7 +99,7 @@ def main(argv=None):
 		
 	for o, a in opts:
 		if o in ("-v", "--version"):
-			print "dnssec-configure version 1.08"
+			print "dnssec-configure version 1.10"
 			print "Author:\n Paul Wouters <paul@xelerance.com>"
 			print "Source : http://www.xelerance.com/software/dnssec-keys/"
 			sys.exit()
@@ -702,31 +702,50 @@ def UnboundSetOptions(sets):
 
 	curSection = ""
 
-	sys.exit("NOT YET IMPLEMENTED")
+	# read the sets, strip out the section, and turn it into a dictionary for easy lookup
+	setdict = {}
+	for setting in sets:
+		print "processing %s"%setting
+		try:
+			(sect,opt,val) = setting.split(":")
+		except:
+			sys.exit("--set requires value in format section:option:value")
+		setdict[opt] = val
+
 	# iterate over lines in config file, remember current section, then pick from supplied sets
 	# to rewrite. Delete from set what we changed. if we see new section, insert lines from
 	# set we didnt match yet before continuing.
-	sect = 0
-	option = 0
-	commentoption = 0
+	sectionsFound = {}
 	for index, item in enumerate(cnf):
-        	if re.match("^\s*.*:\s*",item):
-			sect = index
-			print 
-        	if re.match("^\s*%s\s*:"%optname,item):
-			option = index
-        	if re.match("^\s*#\s*%s\s*:"%optname,item):
-			commentoption = index
-
-	if option:
-		(head,tail) = cnf[option].split(optname)
-		cnf[option] = "%s%s: %s\n"%(head,optname,optvalue)
-	elif commentoption:
-		(head,tail) = cnf[commentoption].split("#",1)
-		cnf[commentoption] = "%s%s: %s\n"%(re.sub("#","",head),optname,optvalue)
-	else:
-		cnf.insert(sect+1, "\t%s: %s"%(optname,optvalue) )
-
+		item = item.strip()
+		# Is this a comment line? For now, we ignore all comments and empty lines
+		if not item:
+			continue
+		if item[0] == "#":
+			continue
+		# check if this is a section seperator
+		if re.match("^\s*[^:]*:\s*$",item):
+			sectline = index
+			sectname = item.split(":")[0].strip()
+			sectionsFound[sectname] = sectline
+			continue
+		if item.strip()[0] != "#":
+			# we should now have a line that has option:value
+			try:
+				(optname,optval) = item.strip().split(":",1)
+				if setdict.has_key(optname):
+					cnf[index] = "%s:%s\n"%(item.split(":")[0],setdict[optname])
+					del setdict[optname]
+			except:
+				pass
+	# now setdict only has new settings left that were not present. 
+	if setdict:
+		for optname in setdict.keys():
+			cnf.insert(1+sectionsFound["server"],"\t%s:%s\n"%(optname,setdict[optname]))
+			del setdict[optname]
+	if setdict:
+		sys.exit("error: UnboundSetOptions: odd we have options left to do?")
+			
 	(fptmp,fname) = tempfile.mkstemp(".conf")
 	fpnew = os.fdopen(fptmp, 'w+b')
 	try:
@@ -737,8 +756,5 @@ def UnboundSetOptions(sets):
 	fpnew.close()
 	return UpdateConfigFile(unboundconf,fname)
 
-
 if __name__ == "__main__":
 	sys.exit(main())
-
-

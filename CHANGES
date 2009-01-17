@@ -1,14 +1,19 @@
+v1.10
+- Added --set, --query, and show options to dnssec-configure
+
+v1.09
+
 v1.08
-* Fix Bind to generate and include the key files
-* Rename package from dnssec-keys to dnssec-conf
-* Fix wildcard processing for unbound-checkconf via unbound patches
-* Fix wildcard processing for bind via generated named.dnssec.keys include
-* Added new IANA keys from https://ns.iana.org/dnssec/status.html in
+- Fix Bind to generate and include the key files
+- Rename package from dnssec-keys to dnssec-conf
+- Fix wildcard processing for unbound-checkconf via unbound patches
+- Fix wildcard processing for bind via generated named.dnssec.keys include
+- Added new IANA keys from https://ns.iana.org/dnssec/status.html in
   disabled state
 
 v1.05
-* Patched unbound, so we no longer need to create *.conf files
-* Removed keepkeyconfs 
+- Patched unbound, so we no longer need to create *.conf files
+- Removed keepkeyconfs 
 
 v1.04
-* Initial pre-release
+- Initial pre-release
