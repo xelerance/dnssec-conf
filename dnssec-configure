@@ -32,12 +32,7 @@ def usage():
 	print "dnssec-configure: (re)configure the Bind and/or Unbound for DNSSEC and DLV"
 	print "usage: dnssec-configure [-u] [-b] [--dnssec=<on|off>] --dlv=<off|on[dlvzone]>"
 	print "                        [--production] [--testing] [--harvest] [--root]"
-	print "examples:"
-	print "   dnssec-configure -u -b --dnssec=on --dlv=dlv.isc.org --production"
-	print "   dnssec-configure --dnssec=on --dlv=on --production --testing --harvest"
-	print "   dnssec-configure --dnssec=off --dlv=off"
-	print "   dnssec-configure -s [-u] [-b]"
-        print ""
+	print ""
 	print "   -b or -n          (re)configure the Bind nameserver (default yes if found)"
 	print "   -u                (re)configure the Unbound nameserver (default yes if found)"
 	print "   -s                show current configuration(s)"
@@ -49,6 +44,19 @@ def usage():
 	print "   --testing         load testing keys into configuration (default no)"
 	print "   --harvest         load harvest keys into configuration (default no)"
 	print "   --root            load root key into configuration [not yet implemented]"
+	print ""
+	print "   --set=section:key:value  Set the option in the section to the desired value"
+	print "   --query=section:key      Query the option in the section"
+	print ""
+	print "examples:"
+	print "   dnssec-configure --dnssec=on --dlv=dlv.isc.org --production"
+	print "   dnssec-configure -u --dnssec=on --dlv=on --production --testing --harvest"
+	print "   dnssec-configure --dnssec=off --dlv=off"
+	print "   dnssec-configure -u --set=secion:option:value [--set=secion:option:value]"
+	print "   dnssec-configure -u --query=secion:option [--query=secion:option]"
+	print "   dnssec-configure -s [-u] [-b]"
+	print "   dnssec-configure -u --set=server:use-caps-for-id:yes"
+	print "   dnssec-configure -u --query=server:use-caps-for-id --query=server:harden-glue"
 
 def main(argv=None):
 	global production
@@ -60,7 +68,7 @@ def main(argv=None):
 	if argv is None:
 		argv = sys.argv
 	try:
-		opts, args = getopt.getopt(argv[1:], "sbnuvh1:2:3:4567", ["show","bind","named", "unbound", "version","help","dnssec=","dlv=","basedir=","production","testing","harvest","root"])
+		opts, args = getopt.getopt(argv[1:], "sbnuvh1:2:3:456789", ["show","bind","named", "unbound", "version","help","dnssec=","dlv=","basedir=","production","testing","harvest","root","set=", "query="])
 	except getopt.error, msg:
 		#print >>sys.stderr, err.msg
 		print >>sys.stderr, "ERROR parsing options"
@@ -83,6 +91,8 @@ def main(argv=None):
 	show = 0
 	restartBind = 0
 	restartUnbound = 0
+	sets = []
+	queries = []
 	if not opts:
 		usage()
 		sys.exit()
@@ -119,6 +129,21 @@ def main(argv=None):
 		if o in ("--root"):
 			root = 1
 
+		if o in ("--set","-8"):
+			if not a:
+				print "error: set requires an argument"
+				usage()
+				sys.exit()
+			else:
+				sets.insert(0,a)
+
+		if o in ("--query","-8"):
+			if not a:
+				print "error: query requires an argument"
+				usage()
+				sys.exit()
+			else:
+				queries.insert(0,a)
 		if o in ("-1","--dnssec"):
 			if not a:
 				print "error: no dnssec mode specified"
@@ -146,6 +171,14 @@ def main(argv=None):
 				else:
 					dlv = 1
 					dlvzone = a
+
+	if sets and queries:
+			sys.exit("error: cannot --set and --query at the same time. Please use either --set or --query")
+
+	if sets or queries:
+		if( (not bind and not unbound) or (bind and unbound)):
+			sys.exit("error: cannot --set or --query  an option unless one of -u and -b (and not both) are specified")
+
 	if not bind and not unbound:
 		# nothing specified, default is both
 		bind = 1
@@ -157,6 +190,14 @@ def main(argv=None):
 			showCurrentConfig("bind")
 		if unbound:
 			showCurrentConfig("unbound")
+		sys.exit()
+
+	if queries:
+		if bind:
+			#not yet implemented - no interesting options really
+			return
+		if unbound:
+			UnboundQueryOptions(queries)
 		sys.exit()
 
 	# check write perms
@@ -172,6 +213,14 @@ def main(argv=None):
 			fp.close()
 		except:
 			sys.exit("error: cannot write %s"%unboundconf)
+
+	if sets:
+		if bind:
+			#not yet implemented - no interesting options really
+			return
+		if unbound:
+			UnboundSetOptions(sets)
+		sys.exit()
 
 	if not dnssec:
 		# then also disable dlv
@@ -203,6 +252,16 @@ def main(argv=None):
 	if unbound:
 		software.append("unbound")
 	software = ",".join(software)
+
+	# change the options we need to change with --set so that we don't have to re-restart
+	# the daemons later.
+	if(sets):
+		if unbound:
+			UnboundSetOptions(sets)
+		elif bind:
+			BindSetOptions(sets)
+		else:
+			sys.exit("error: unknown daemon for --set")
 
 	if dnssec:
 		if not dlv:
@@ -589,23 +648,60 @@ def showCurrentConfig(nstype):
 		usage()
 		sys.exit()
 
-def UnboundSetOption(section,optname,optvalue):
+# queries contains a set of strings "section:option"
+def UnboundQueryOptions(queries):
 	global unboundconf
 
-	if section not in [ "remote-control","server" ]:
-		return
+	# remove section bit, we don't need/use it for unbound. makes lookups easier
+	for index,entry in enumerate(queries):
+		try:
+			queries[index] = entry.split(":",1)[1]
+		except:
+			# remove bogus query from set
+			queries.pop(index)
+	fp = open(unboundconf)
+	cnf = fp.readlines()
+	fp.close()
+
+	for line in cnf:
+		line = line.strip()
+		if not line:
+			continue
+		if line[0] == "#":
+			continue
+		try:
+			(opt,val) = line.split(":")
+			if not val:
+				continue
+		except:
+			continue
+		opt = opt.strip()
+		for query in queries:
+			if query == opt:
+				print "%s:%s"%(opt,val.strip())
+
+# sets contains a set of strings "section:option:value"
+# assumption is only one of these may occur!! 
+def UnboundSetOptions(sets):
+	global unboundconf
 
 	fp = open(unboundconf)
 	cnf = fp.readlines()
 	fp.close()
 
-	# first try if we find the option, if not add to start of section
+	curSection = ""
+
+	sys.exit("NOT YET IMPLEMENTED")
+	# iterate over lines in config file, remember current section, then pick from supplied sets
+	# to rewrite. Delete from set what we changed. if we see new section, insert lines from
+	# set we didnt match yet before continuing.
 	sect = 0
 	option = 0
 	commentoption = 0
 	for index, item in enumerate(cnf):
-        	if re.match("^\s*%s:\s*"%section,item):
+        	if re.match("^\s*.*:\s*",item):
 			sect = index
+			print 
         	if re.match("^\s*%s\s*:"%optname,item):
 			option = index
         	if re.match("^\s*#\s*%s\s*:"%optname,item):
