@@ -497,9 +497,12 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 	global production
 	global testing
 	global harvest
-	fp = open(unboundconf)
-	cnf = fp.readlines()
-	fp.close()
+	try:
+		fp = open(unboundconf)
+		cnf = fp.readlines()
+		fp.close()
+	except:
+		sys.exit("error: failed to open %s"%unboundconf)
 	# flip the yesno arround because we say 'yes' to disable dnssec
 	if yesno == "yes":
 		yesno = "no"
@@ -597,9 +600,12 @@ def showCurrentConfig(nstype):
 	checkUnboundConfig()
 
 	if nstype == "unbound":
-		fp = open(unboundconf)
-		cnf = fp.readlines()
-		fp.close()
+		try:
+			fp = open(unboundconf)
+			cnf = fp.readlines()
+			fp.close()
+		except:
+			sys.exit("error: failed to find %s"%unboundconf)
 		for line in cnf:
 			if re.match("^\s*val-permissive-mode\s*:",line):
 				if "yes" in line.split(":")[1]:
@@ -659,10 +665,12 @@ def UnboundQueryOptions(queries):
 		except:
 			# remove bogus query from set
 			queries.pop(index)
-	fp = open(unboundconf)
-	cnf = fp.readlines()
-	fp.close()
-
+	try:
+		fp = open(unboundconf)
+		cnf = fp.readlines()
+		fp.close()
+	except:
+		sys.exit("error: failed to open %s"%unboundconf)
 	for line in cnf:
 		line = line.strip()
 		if not line:
@@ -685,9 +693,12 @@ def UnboundQueryOptions(queries):
 def UnboundSetOptions(sets):
 	global unboundconf
 
-	fp = open(unboundconf)
-	cnf = fp.readlines()
-	fp.close()
+	try:
+		fp = open(unboundconf)
+		cnf = fp.readlines()
+		fp.close()
+	except:
+		sys.exit("error: failed to open %s"%unboundconf)
 
 	curSection = ""
 
