@@ -51,6 +51,23 @@
     <arg choice='opt'>-u </arg>
     <arg choice='opt'>-b </arg>
 </cmdsynopsis>
+<cmdsynopsis>
+  <command>dnssec-configure</command>
+    <group choice='plain'>
+       <arg choice='plain'>-u</arg>
+       <arg choice='plain'>-b</arg>
+    </group>
+    <arg choice='plain'>--set=<replaceable>secion:optname:optval</replaceable></arg>
+</cmdsynopsis>
+<cmdsynopsis>
+  <command>dnssec-configure</command>
+    <group choice='plain'>
+       <arg choice='plain'>-u</arg>
+       <arg choice='plain'>-b</arg>
+    </group>
+    <arg choice='plain'>--query=<replaceable>secion:optname:optval</replaceable></arg>
+</cmdsynopsis>
+
 </refsynopsisdiv>
 
 <refsect1 id='description'><title>DESCRIPTION</title>
@@ -95,7 +112,28 @@ other options below are ignored.
   </varlistentry>
 
   <varlistentry>
-  <term><option>--dnssec=</option>&lt;on|off>&gt;</term>
+  <term><option>--set=</option>&lt;section:optname:optvalue&gt;</term>
+  <listitem>
+<para>
+Set the options optname to value in the specified section of the configuration file.
+This option cannot be used with --dnssec, --dlv, --query or --show. This option
+can be specified multiple times to set more then one option at once.
+</para>
+  </listitem>
+  </varlistentry>
+
+  <varlistentry>
+  <term><option>--set=</option>&lt;section:optname:optvalue&gt;</term>
+  <listitem>
+<para>
+Query the setting optname in the specified section of the configuration file.
+This option cannot be used with --dnssec, --dlv, --set or --show. This option
+can be specified multiple times to query more then one option at once.
+</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>--dnssec=</option>&lt;on|off&gt;</term>
   <listitem>
 <para>
 This option will enable or disable all <emphasis remap='I'>DNSSEC</emphasis>
