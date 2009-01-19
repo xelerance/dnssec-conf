@@ -671,6 +671,7 @@ def UnboundQueryOptions(queries):
 		fp.close()
 	except:
 		sys.exit("error: failed to open %s"%unboundconf)
+	section = "unknown"
 	for line in cnf:
 		line = line.strip()
 		if not line:
@@ -680,13 +681,13 @@ def UnboundQueryOptions(queries):
 		try:
 			(opt,val) = line.split(":")
 			if not val:
-				continue
+				section = opt
 		except:
 			continue
 		opt = opt.strip()
 		for query in queries:
 			if query == opt:
-				print "%s:%s"%(opt,val.strip())
+				print "%s:%s:%s"%(section,opt,val.strip())
 
 # sets contains a set of strings "section:option:value"
 # assumption is only one of these may occur!! 
