@@ -52,6 +52,7 @@ rm -rf ${RPM_BUILD_ROOT}
 %changelog
 * Sat Jan 17 2009 Paul Wouters <paul@xelerance.com> - 1.10-1
 - Updated to 1.10. Adds --set and --query and show option to use with system-config-dnssec
+- Updated RIPE's reverse keys
 
 * Tue Jan 13 2009 Paul Wouters <paul@xelerance.com> - 1.09-1
 - Added testing key for gr.
