@@ -735,14 +735,14 @@ def UnboundSetOptions(sets):
 			try:
 				(optname,optval) = item.strip().split(":",1)
 				if setdict.has_key(optname):
-					cnf[index] = "%s:%s\n"%(item.split(":")[0],setdict[optname])
+					cnf[index] = "\t%s: %s\n"%(item.split(":")[0],setdict[optname])
 					del setdict[optname]
 			except:
 				pass
 	# now setdict only has new settings left that were not present. 
 	if setdict:
 		for optname in setdict.keys():
-			cnf.insert(1+sectionsFound["server"],"\t%s:%s\n"%(optname,setdict[optname]))
+			cnf.insert(1+sectionsFound["server"],"\t%s: %s\n"%(optname,setdict[optname]))
 			del setdict[optname]
 	if setdict:
 		sys.exit("error: UnboundSetOptions: odd we have options left to do?")
