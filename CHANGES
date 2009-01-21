@@ -1,3 +1,9 @@
+v1.11
+- Work around for unbound parser bug where a space must follow a colon
+- Added key id's to those keys that did not yet list them (created with
+  on older version of dnskey-pull)
+- Minor updates on some keys in /etc/pki/dnssec-keys/testing/ 
+
 v1.10
 - Added --set, --query, and show options to dnssec-configure
 - Removed testing key for gr. - it vanished again.
