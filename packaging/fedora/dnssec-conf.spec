@@ -4,7 +4,7 @@ Version: 1.12
 Release: 1
 License: GPLv2+
 Url: http://www.xelerance.com/software/dnssec-conf/
-Source: %{name}-%{version}.tar.gz
+Source: http://www.xelerance.com/software/%{name}/%{name}-%{version}.tar.gz
 Group: System Environment/Daemons
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch: noarch
@@ -29,7 +29,7 @@ and harvested keys, as well a script to harvest DNSKEY's from DNS.
 make 
 
 %install
-rm -rf %{buildroot}
+rm -rf %{RPM_BUILD_ROOT}
 make DESTDIR=${RPM_BUILD_ROOT} install
 
 %clean
