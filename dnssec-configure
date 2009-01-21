@@ -113,9 +113,9 @@ def main(argv=None):
 		
 	for o, a in opts:
 		if o in ("-v", "--version"):
-			print "dnssec-configure version 1.12"
+			print "dnssec-configure version 1.13"
 			print "Author:\n Paul Wouters <paul@xelerance.com>"
-			print "Source : http://www.xelerance.com/software/dnssec-keys/"
+			print "Source : http://www.xelerance.com/software/dnssec-conf/"
 			sys.exit()
 		if o in ("-h", "--help"):
 			usage()
