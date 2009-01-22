@@ -29,7 +29,7 @@ and harvested keys, as well a script to harvest DNSKEY's from DNS.
 make 
 
 %install
-rm -rf %{RPM_BUILD_ROOT}
+rm -rf ${RPM_BUILD_ROOT}
 make DESTDIR=${RPM_BUILD_ROOT} install
 
 %clean
