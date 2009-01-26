@@ -1,8 +1,22 @@
 #!/usr/bin/python
 #
-# (C)opyright Xelerance 2007 2008, Paul Wouters <paul@xelerance.com>
-# License: GPLv2
+# (C)opyright Xelerance 2007 - 2009, Paul Wouters <paul@xelerance.com>
 #
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+
 # TODO: allow specifying location of conf files
 # TODO: make work on debian/ubuntu (different way of starting services)
 # TODO: configurable path for /etc/pki/dnssec-keys/
@@ -99,9 +113,9 @@ def main(argv=None):
 		
 	for o, a in opts:
 		if o in ("-v", "--version"):
-			print "dnssec-configure version 1.10"
+			print "dnssec-configure version 1.13"
 			print "Author:\n Paul Wouters <paul@xelerance.com>"
-			print "Source : http://www.xelerance.com/software/dnssec-keys/"
+			print "Source : http://www.xelerance.com/software/dnssec-conf/"
 			sys.exit()
 		if o in ("-h", "--help"):
 			usage()
@@ -671,6 +685,7 @@ def UnboundQueryOptions(queries):
 		fp.close()
 	except:
 		sys.exit("error: failed to open %s"%unboundconf)
+	section = "unknown"
 	for line in cnf:
 		line = line.strip()
 		if not line:
@@ -680,13 +695,13 @@ def UnboundQueryOptions(queries):
 		try:
 			(opt,val) = line.split(":")
 			if not val:
-				continue
+				section = opt
 		except:
 			continue
 		opt = opt.strip()
 		for query in queries:
 			if query == opt:
-				print "%s:%s"%(opt,val.strip())
+				print "%s:%s:%s"%(section,opt,val.strip())
 
 # sets contains a set of strings "section:option:value"
 # assumption is only one of these may occur!! 
@@ -734,14 +749,14 @@ def UnboundSetOptions(sets):
 			try:
 				(optname,optval) = item.strip().split(":",1)
 				if setdict.has_key(optname):
-					cnf[index] = "%s:%s\n"%(item.split(":")[0],setdict[optname])
+					cnf[index] = "\t%s: %s\n"%(item.split(":")[0],setdict[optname])
 					del setdict[optname]
 			except:
 				pass
 	# now setdict only has new settings left that were not present. 
 	if setdict:
 		for optname in setdict.keys():
-			cnf.insert(1+sectionsFound["server"],"\t%s:%s\n"%(optname,setdict[optname]))
+			cnf.insert(1+sectionsFound["server"],"\t%s: %s\n"%(optname,setdict[optname]))
 			del setdict[optname]
 	if setdict:
 		sys.exit("error: UnboundSetOptions: odd we have options left to do?")

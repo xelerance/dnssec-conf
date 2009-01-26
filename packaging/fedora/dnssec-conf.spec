@@ -1,10 +1,10 @@
 Summary: DNSSEC and DLV configuration tool (and TLD repository until the root is signed)
 Name: dnssec-conf
-Version: 1.10
-Release: 1
+Version: 1.13
+Release: 2
 License: GPLv2+
 Url: http://www.xelerance.com/software/dnssec-conf/
-Source: %{name}-%{version}.tar.gz
+Source: http://www.xelerance.com/software/%{name}/%{name}-%{version}.tar.gz
 Group: System Environment/Daemons
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch: noarch
@@ -30,7 +30,7 @@ See also: system-config-dnssec
 make 
 
 %install
-rm -rf %{buildroot}
+rm -rf %{RPM_BUILD_ROOT}
 make DESTDIR=${RPM_BUILD_ROOT} install
 
 %clean
@@ -51,8 +51,18 @@ rm -rf ${RPM_BUILD_ROOT}
 %{_mandir}/*/*
 
 %changelog
+* Wed Jan 21 2009 Paul Wouters <paul@xelerance.com> - 1.13-2
+- Upstream made source available :=)
+- removed macros from changes.
+
+* Wed Jan 21 2009 Paul Wouters <paul@xelerance.com> - 1.13-1
+- Clarify license
+- Fix mixed use of RPM_BUILD_ROOT and buildroot
+- Source tag fully qualified now
+
 * Sat Jan 17 2009 Paul Wouters <paul@xelerance.com> - 1.10-1
 - Updated to 1.10. Adds --set and --query and show option to use with system-config-dnssec
+- Updated RIPE's reverse keys
 
 * Tue Jan 13 2009 Paul Wouters <paul@xelerance.com> - 1.09-1
 - Added testing key for gr.
