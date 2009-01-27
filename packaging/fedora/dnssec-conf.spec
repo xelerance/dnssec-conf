@@ -21,6 +21,7 @@ directly included in the bind or unbound nameserver configuration files.
 dnssec-conf includes a commandline configuration client for Bind and
 Unbound, known DNSSEC keys, URL's to official publication pages of keys,
 and harvested keys, as well a script to harvest DNSKEY's from DNS.
+See also: system-config-dnssec
 
 %prep
 %setup -q -n %{name}-%{version}
