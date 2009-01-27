@@ -1,3 +1,6 @@
+v1.14
+- Added proper exit status for dnkey-pull
+
 v1.13
 - Clarify license in source files
 - Fix mixed use of $RPM_BUILD_ROOT and %{buildroot}
