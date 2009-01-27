@@ -207,12 +207,7 @@ def main(argv=None):
 		usage()
 		sys.exit()
 
-	if trusted:
-		if outputfp:
-			outputfp.write("trusted-keys {\n\n")
-		else:
-			print "trusted-keys {"
-
+	obtainedKeys = ""
 	for zone in args:
 		urlkeys = ""
 		# first check for url
@@ -227,31 +222,53 @@ def main(argv=None):
 					zone = zone[1:]
 				#print "Processing %s"%zone
 			if axfr:
-				getkeys(zone,ns)
+				obtainedKeys += getkeys(zone,ns)
 			else:
-				getkey(zone,ns)
+				obtainedKeys += getkey(zone,ns)
+	
+	# if we got nothing, return with failure
+	if not obtainedKeys:
+		sys.exit("error: obtaining DNSKEY's failed")
+
 	if trusted:
 		if outputfp:
-			outputfp.write("};\n\n")
-			outputfp.close()
+			outputfp.write("trusted-keys {\n")
 		else:
-			print "};"
-	if urlkeys:
+			print "trusted-keys {"
+
+	if obtainedKeys:
+		if outputfp:
+			outputfp.write(obtainedKeys+"\n")
+		else:
+			print obtainedKeys
+
+	elif urlkeys:
 		if outputfp:
 			outputfp.write(urlkeys+"\n")
-			outputfp.close()
 		else:
-			print urlkeys +"\n"
+			print urlkeys
 	
+	if trusted:
+		if outputfp:
+			outputfp.write("};\n")
+		else:
+			print "};"
+
+	if outputfp:
+		outputfp.close()
 
 def NSonly(x): return "IN\tNS" in x
 
+# return the key obtained
 def getkey(zone,ns):
-	global outputfp
 	# we're not using axfr, so we can only attempt DNSKEY's for the APEX
+	# initialise resolver object - this does not use specified NS, because
+	# that one might not be a public open resolver.
+	# TODO: but the user knows best, so do it anyway
 	res = dns.resolver.Resolver()
 	res.use_edns(1, 0, 1400)
 	answers = ""
+	keyout = ""
 	try:
 		answers = res.query(zone,'DNSKEY')
 	except:
@@ -262,24 +279,18 @@ def getkey(zone,ns):
 		if zone.lower()[0:4] == "xn--":
 			errors = ""
 			puny = "//; %s\n"% encodings.punycode.punycode_decode(zone[4:],errors)
-			punyutf8 = puny.encode("utf8")
-			if outputfp:
-				outputfp.write(punyutf8)
-			else:
-				print puny
+			keyout += puny.encode("utf8")
 		for rdata in answers.rrset:
 			# check for KSK bit
 			if (int(rdata.flags)%2) !=0:
 				keytag = calcKeyTag(rdata.key,rdata.flags,rdata.protocol,rdata.algorithm)
-				msg =  '"%s" %s %s %s "%s"; // key id = %s'%(zone, rdata.flags,
+				msg =  '"%s" %s %s %s "%s"; // key id = %s\n'%(zone, rdata.flags,
 					rdata.protocol, rdata.algorithm,
 					base64.b64encode(rdata.key), keytag )
-				if outputfp:
-					outputfp.write(msg+"\n")
-				else:
-					print msg
-		if outputfp:
-			outputfp.write("\n")
+				keyout += msg
+		return keyout
+	else:
+		return ""
 
 def getkeys(zone,ns):
 	global outputfp
@@ -296,6 +307,7 @@ def getkeys(zone,ns):
 
 	# initialise resolver object - this does not use specified NS, because
 	# that one might not be a public open resolver.
+	# TODO: but the user knows best, so do it anyway
 	res = dns.resolver.Resolver()
 	res.use_edns(1, 0, 1400)
 	for zone in domainList:

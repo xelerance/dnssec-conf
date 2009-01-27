@@ -118,6 +118,10 @@ zones:</para>
 <para><emphasis remap='B'>% dnskey-pull https://registro.br/ksk/index.html</emphasis></para>
 </refsect1>
 
+<refsect1 id='exit_status'><title>EXIT STATUS</title>
+<para>dnskey-pull returns 0 when it found one or more DNSKEY records, and non-zero upon finding no DNSKEY records.</para>
+</refsect1>
+
 <refsect1 id='see_also'><title>SEE ALSO</title>
 <para><citerefentry><refentrytitle>dnssec-configure</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
 <citerefentry><refentrytitle>system-config-dnssec</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
