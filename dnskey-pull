@@ -228,7 +228,7 @@ def main(argv=None):
 	
 	# if we got nothing, return with failure
 	if not obtainedKeys:
-		sys.exit("error: obtaining DNSKEY's failed")
+		sys.exit("error: obtaining DNSKEY's failed for %s"%zone)
 
 	if trusted:
 		if outputfp:

@@ -30,9 +30,17 @@ import tempfile,shutil
 from stat import *
 
 global namedconf
-namedconf = "/etc/named.conf"
+namedconfs = ( "/etc/named.conf", "/usr/local/etc/named.conf", "/etc/bind/named.conf", "/etc/named/named.conf","/var/named/named.conf" )
+for entry in namedconfs:
+	if os.path.isfile(entry):
+		namedconf = entry
+		break
 global unboundconf 
-unboundconf = "/etc/unbound/unbound.conf"
+unboundconfs = ( "/etc/unbound/unbound.conf", "/usr/local/etc/unbound.conf", "/etc/unbound.conf" )
+for entry in unboundconfs:
+	if os.path.isfile(entry):
+		unboundconf = entry
+		break
 global bversion
 bversion = "unknown"
 global production
@@ -197,6 +205,12 @@ def main(argv=None):
 		# nothing specified, default is both
 		bind = 1
 		unbound = 1
+
+	# find the proper config files
+	if bind and not namedconf:
+		sys.exit("error: bind configuration not found")
+	if unbound and not unboundconf:
+		sys.exit("error: unbound configuration not found")
 
 	# is show, just show current config and quit
 	if show:
