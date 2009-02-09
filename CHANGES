@@ -1,3 +1,14 @@
+v1.15
+- New zones with keys assigned to RIPE: 109.in-addr.arpa. and 178.in-addr.arpa.
+- .bg added a key and is in rollover.
+- .gov key added to testing. They will not publish their DNSKEY outside
+  DNS until they are considered production. Then the key should appear
+  at https://www.dotgov.gov/dnssecinfo.aspx
+- Don't use GNU extensions for cp. [Chris Lee]
+- Look for the configuration files in more then just the Fedora places.
+- Added key id's to all in-addr.arpa keys
+- Removed dnsx.xelerance.com key. It was not meant to be in the public package
+
 v1.14
 - Added proper exit status for dnkey-pull
 
