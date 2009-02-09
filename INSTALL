@@ -1,0 +1,29 @@
+#
+# dnssec-configure by Paul Wouters <paul@xelerance.com>
+#
+
+This package contains DNSSEC keys and tools to grab, use, update and configure
+these DNSSEC keys for the Bind and Unbound nameserver.
+
+REQUIREMENTS:
+
+	* python-dns from http://www.pythondns.org/"
+	   - Fedora: yum install python-dns
+	   - Debian: apt-get install python-dnspython   (NOT python-dns!)
+	* curl
+	* A DNSSEC capable nameserver, eg:
+	  - Bind 9.3.3+ (but really try to use at least version 9.6.0)
+	  - Unbound
+	* a properly working non-firewalled, UDP *and* TCP port 53 to the world
+
+QUICK INSTALL:
+
+	make
+	make install
+	dnssec-configure --dnssec=on --dlv=on --production
+
+Documentation:
+
+	man dnssec-configure
+	man dnskey-pull
+	more README.KEYS
