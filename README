@@ -1,29 +1,60 @@
+# DNSSEC keys version 1.15, Feb  9 2009
+# by Paul Wouters <paul@xelerance.com>
+# http://www.xelerance.com/software/dnssec-conf/
 #
-# dnssec-configure by Paul Wouters <paul@xelerance.com>
+# This file contans notes on where and why we got certain DNSSEC keys
+# This is required to prime DNSSEC aware caching resolvers such as Bind or Unbound
+# Only KSK's are obtained for loading into the resolver. ZSK's are ignored.
 #
+# production - known good keys. Verified by a human. Usually updates are
+#              posted on the DNS related mailinglists (dnsop, dnsex,
+#              dnssec-deployment, namedroppers and dedicates lists for TLD's)
+# testing    - testbed keys. These might affect production. Should not be
+#              enabled unless you know what you're doing
+# harvest    - keys were obtained querying the DNS. Unverified and fully
+#              automated process. Use at own risk. Mostly used to detect
+#              new keys that were not announced anywhere
 
-This package contains DNSSEC keys and tools to grab, use, update and configure
-these DNSSEC keys for the Bind and Unbound nameserver.
-
-REQUIREMENTS:
-
-	* python-dns from http://www.dnspython.org/"
-	   - Fedora: yum install python-dns
-	   - Debian: apt-get install python-dnspython   (NOT python-dns!)
-	* curl
-	* A DNSSEC capable nameserver, eg:
-	  - Bind 9.3.3+ (but really try to use at least version 9.6.0)
-	  - Unbound
-	* a properly working non-firewalled, UDP *and* TCP port 53 to the world
-
-QUICK INSTALL:
-
-	make
-	make install
-	dnssec-configure --dnssec=on --dlv=on --production
-
-Documentation:
-
-	man dnssec-configure
-	man dnskey-pull
-	more README.KEYS
+# in-addr.arpa. itself is not signed, but some domains inside it are:
+# RIPE's in-addr.arpa. signed zones are obtained from RIPE's https server
+# See https://www.ripe.net/projects/disi//keys/
+#
+# e164.arpa. (ENUM) is obtained from RIPE's https server
+# All signed subdomains in e164.arpa. are properly delegated with DS records,
+# and do not need a separate trust anchor in a resolver.
+# See: http://www.ripe.net/enum/
+#
+# IDN test domains were harvested
+# See http://www.icann.org/en/announcements/announcement-2-19jun07.htm
+#
+# dlv.isc.org
+# ISC DLV Registry
+# See https://secure.isc.org/index.pl?/ops/dlv/index.php
+#
+# Museum .museum
+# http://about.museum/ is the NIC, no key URL known
+#
+# Puerto Rico .pr
+# See http://dnssec.nic.pr/keys/nic.pr.zip
+# Their website information does not list teir KSK, only their ZSK.
+# We configure to use the KSK.
+#
+# Bulgaria .bg
+# https://www.register.bg/user/ has some information, but no key url known
+#
+# Sweden .se
+# http://www.iis.se/domains/sednssec/publickey
+#
+# Brasil .br
+# https://registro.br/ksk/index.html
+# (displays badly in some browsers)
+#
+# Czech Republic .cz
+# http://www.nic.cz/dnssec/
+#
+# .gov (testing, but currently signed)
+# https://www.dotgov.gov/dnssecinfo.aspx
+#
+# The Root zone (test) and other test keys: http://ns.iana.org/
+# disabled because you will have to resolve via their nameserver for
+# these keys to work.

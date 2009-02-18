@@ -1,6 +1,6 @@
 Summary: DNSSEC and DLV configuration tool (and TLD repository until the root is signed)
 Name: dnssec-conf
-Version: 1.14
+Version: 1.15
 Release: 1
 License: GPLv2+
 Url: http://www.xelerance.com/software/dnssec-conf/
@@ -38,7 +38,7 @@ rm -rf ${RPM_BUILD_ROOT}
 
 %files 
 %defattr(-,root,root)
-%doc LICENSE README
+%doc LICENSE README INSTALL
 %attr(0755,root,root) %dir %{_sysconfdir}/pki/dnssec-keys
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/pki/dnssec-keys/*/*
 %attr(0755,root,root) %dir %{_sysconfdir}/pki/dnssec-keys/production
@@ -51,6 +51,9 @@ rm -rf ${RPM_BUILD_ROOT}
 %{_mandir}/*/*
 
 %changelog
+* Mon Feb  9 2009 Paul Wouters <paul@xelerance.com> - 1.15-1
+- Added INSTALL to doc section
+
 * Wed Jan 21 2009 Paul Wouters <paul@xelerance.com> - 1.13-2
 - Upstream made source available :=)
 - removed macros from changes.
