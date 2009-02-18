@@ -7,7 +7,7 @@ these DNSSEC keys for the Bind and Unbound nameserver.
 
 REQUIREMENTS:
 
-	* python-dns from http://www.pythondns.org/"
+	* python-dns from http://www.dnspython.org/"
 	   - Fedora: yum install python-dns
 	   - Debian: apt-get install python-dnspython   (NOT python-dns!)
 	* curl

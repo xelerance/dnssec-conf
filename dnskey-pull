@@ -35,7 +35,7 @@ errors = ""
 try:
 	import dns.resolver
 except:
-	print "dnskey-pull requires the python-dns package from http://www.pythondns.org/"
+	print "dnskey-pull requires the python-dns package from http://www.dnspython.org/"
 	print "Fedora: yum install python-dns"
 	print "Debian: apt-get install python-dnspython   (NOT python-dns!)"
 	sys.exit()
