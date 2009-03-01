@@ -1,4 +1,4 @@
-# DNSSEC keys version 1.15, Feb  9 2009
+# DNSSEC keys version 1.16, Mar  1 2009
 # by Paul Wouters <paul@xelerance.com>
 # http://www.xelerance.com/software/dnssec-conf/
 #
@@ -52,7 +52,7 @@
 # Czech Republic .cz
 # http://www.nic.cz/dnssec/
 #
-# .gov (testing, but currently signed)
+# .gov (production)
 # https://www.dotgov.gov/dnssecinfo.aspx
 #
 # The Root zone (test) and other test keys: http://ns.iana.org/
