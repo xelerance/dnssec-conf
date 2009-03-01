@@ -1,6 +1,6 @@
-Summary: DNSSEC and DLV configuration tool (and TLD repository until the root is signed)
+Summary: DNSSEC and DLV configuration and priming tool
 Name: dnssec-conf
-Version: 1.15
+Version: 1.16
 Release: 1
 License: GPLv2+
 Url: http://www.xelerance.com/software/dnssec-conf/
