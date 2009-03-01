@@ -1,3 +1,7 @@
+v1.16
+- .gov went in production. Move key from testing to production
+  See http://dotgov.gov/dnssecinfo.aspx
+
 v1.15
 - New zones with keys assigned to RIPE: 109.in-addr.arpa. and 178.in-addr.arpa.
 - .bg added a key and is in rollover.
