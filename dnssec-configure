@@ -30,13 +30,15 @@ import tempfile,shutil
 from stat import *
 
 global namedconf
+namedconf = "unknown"
 namedconfs = ( "/etc/named.conf", "/usr/local/etc/named.conf", "/etc/bind/named.conf", "/etc/named/named.conf","/var/named/named.conf" )
 for entry in namedconfs:
 	if os.path.isfile(entry):
 		namedconf = entry
 		break
 global unboundconf 
-unboundconfs = ( "/etc/unbound/unbound.conf", "/usr/local/etc/unbound.conf", "/etc/unbound.conf" )
+unboundconf = "unknown"
+unboundconfs = ( "/etc/unbound/unbound.conf", "/usr/local/etc/unbound/unbound.conf", "/usr/local/etc/unbound.conf", "/etc/unbound.conf" )
 for entry in unboundconfs:
 	if os.path.isfile(entry):
 		unboundconf = entry
@@ -90,6 +92,8 @@ def main(argv=None):
 	global testing
 	global harvest
 	global restart
+	global namedconf
+	global unboundconf
 #	if commands.getoutput( "whoami" ) != "root":
 #		sys.exit("root permission is required  to write config files"
 
@@ -215,9 +219,9 @@ def main(argv=None):
 		unbound = 1
 
 	# find the proper config files
-	if bind and not namedconf:
+	if bind and namedconf == "unknown":
 		sys.exit("error: bind configuration not found")
-	if unbound and not unboundconf:
+	if unbound and unboundconf == "unknown":
 		sys.exit("error: unbound configuration not found")
 
 	# is show, just show current config and quit

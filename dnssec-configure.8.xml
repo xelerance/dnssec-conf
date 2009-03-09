@@ -41,6 +41,7 @@
        <arg choice='plain'><replaceable>&lt;dlvzone&gt;</replaceable></arg>
     </group>
     <arg choice='opt'>--basedir=<replaceable>&lt;dir&gt;</replaceable></arg>
+    <arg choice='opt'>--norestart </arg>
     <arg choice='opt'>--production </arg>
     <arg choice='opt'>--testing </arg>
     <arg choice='opt'>--harvest </arg>
@@ -172,6 +173,18 @@ You can specify your own DLV Registry, but you must make sure the <emphasis rema
 </para>
   </listitem>
   </varlistentry>
+
+  <varlistentry>
+  <term><option>--norestart</option></term>
+  <listitem>
+<para>Do not attempt to restart any running DNS resolving nameservers. This
+is for use within initscripts, where dnssec-configure is called to update
+the settings from within a DNS server initscript. Otherwise this would
+cause a loop.
+</para>
+  </listitem>
+  </varlistentry>
+
 </variablelist>
 
 <para>The following options determine which Trusted Keys to preload with
