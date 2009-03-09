@@ -49,15 +49,19 @@ global testing
 testing = 0
 global harvest
 harvest = 0
+global restart
+restart = 1
 
 def usage():
 	print "dnssec-configure: (re)configure the Bind and/or Unbound for DNSSEC and DLV"
 	print "usage: dnssec-configure [-u] [-b] [--dnssec=<on|off>] --dlv=<off|on[dlvzone]>"
 	print "                        [--production] [--testing] [--harvest] [--root]"
 	print ""
+	print "   -s                show current configuration(s)"
 	print "   -b or -n          (re)configure the Bind nameserver (default yes if found)"
 	print "   -u                (re)configure the Unbound nameserver (default yes if found)"
-	print "   -s                show current configuration(s)"
+	print "   --norestart       Do not attempt to restart the DNS resolver daemon"
+	print ""
 	print "   --dnssec= <on|of>  enable or disable DNSSEC"
 	print "   --dlv= <off|on|dlvname> enable or disable DLV"
 	print "          (default dlv as specified with 'on' is dlv.isc.org)" 
@@ -67,13 +71,14 @@ def usage():
 	print "   --harvest         load harvest keys into configuration (default no)"
 	print "   --root            load root key into configuration [not yet implemented]"
 	print ""
+	print "Addition unbound options:"
 	print "   --set=section:key:value  Set the option in the section to the desired value"
 	print "   --query=section:key      Query the option in the section"
 	print ""
 	print "examples:"
 	print "   dnssec-configure --dnssec=on --dlv=dlv.isc.org --production"
 	print "   dnssec-configure -u --dnssec=on --dlv=on --production --testing --harvest"
-	print "   dnssec-configure --dnssec=off --dlv=off"
+	print "   dnssec-configure --norestart --dnssec=off --dlv=off"
 	print "   dnssec-configure -u --set=section:option:value [--set=section:option:value]"
 	print "   dnssec-configure -u --query=section:option [--query=section:option]"
 	print "   dnssec-configure -s [-u] [-b]"
@@ -84,13 +89,14 @@ def main(argv=None):
 	global production
 	global testing
 	global harvest
+	global restart
 #	if commands.getoutput( "whoami" ) != "root":
 #		sys.exit("root permission is required  to write config files"
 
 	if argv is None:
 		argv = sys.argv
 	try:
-		opts, args = getopt.getopt(argv[1:], "sbnuvh1:2:3:456789", ["show","bind","named", "unbound", "version","help","dnssec=","dlv=","basedir=","production","testing","harvest","root","set=", "query="])
+		opts, args = getopt.getopt(argv[1:], "sbnuvh1:2:3:456789x", ["show","bind","named", "unbound", "version","help","dnssec=","dlv=","basedir=","production","testing","harvest","root","set=", "query=", "norestart"])
 	except getopt.error, msg:
 		#print >>sys.stderr, err.msg
 		print >>sys.stderr, "ERROR parsing options"
@@ -133,6 +139,8 @@ def main(argv=None):
 			bind = 1
 		if o in ("-u","--unbound"):
 			unbound = 1
+		if o in ("-x","--norestart"):
+			restart = 0
 		if o in ("-s","--show"):
 			show = 1
 		if o in ("-3","--basedir"):
@@ -317,11 +325,11 @@ def main(argv=None):
 	# we modified the config files, verify and restart (not reload)
 	if bind:
 		checkBindConfig()
-		if restartBind:
+		if restartBind and restart == 1:
 			restartDaemon("named")
 	if unbound:
 		checkUnboundConfig()
-		if restartUnbound:
+		if restartUnbound and restart == 1:
 			restartDaemon("unbound")
 
 
