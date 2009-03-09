@@ -1,0 +1,7 @@
+# This file is used by bind and unbound to determine if DNSSEC and/or DLV
+# needs to be enabled for DNS resolving.
+# See further: http://fedoraproject.org/wiki/Features/DNSSEC
+# Place your own DNSSEC keys in /etc/pki/dnssec-keys/production/
+DNSSEC="yes"
+#DLV="dlv.isc.org"
+DLV="no"
