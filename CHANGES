@@ -1,5 +1,6 @@
 v1.17
 - Added --norestart option to ease use of dnssec-configure in initscripts
+- Added support for /etc/sysconfig/ dir when using Fedora/RHEL/CentOS
 
 v1.16
 - .gov went in production. Move key from testing to production

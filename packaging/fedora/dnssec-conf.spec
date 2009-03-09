@@ -1,6 +1,6 @@
 Summary: DNSSEC and DLV configuration and priming tool
 Name: dnssec-conf
-Version: 1.16
+Version: 1.17
 Release: 1
 License: GPLv2+
 Url: http://www.xelerance.com/software/dnssec-conf/
@@ -32,7 +32,7 @@ make
 %install
 rm -rf ${RPM_BUILD_ROOT}
 make DESTDIR=${RPM_BUILD_ROOT} install
-
+install -m 0755 packaging/fedora/dnssec.sysconfig %{_sysconfdir}/dnssec
 %clean
 rm -rf ${RPM_BUILD_ROOT}
 
@@ -51,8 +51,16 @@ rm -rf ${RPM_BUILD_ROOT}
 %{_mandir}/*/*
 
 %changelog
+* Mon Mar 09 2009 Paul Wouters <paul@xelerance.com> - 1.17-1
+- Upgraded to 1.17. This adds better initscript support and fixes a bug
+  when named/unbound were not installed (rhbug 488685)
+
+* Sun Mar 01 2009 Paul Wouters <paul@xelerance.com> - 1.16-1
+- Upgraded to 1.16. This adds the production key for .gov
+  See http://dotgov.gov/dnssecinfo.aspx
+
 * Mon Feb  9 2009 Paul Wouters <paul@xelerance.com> - 1.15-1
-- Added INSTALL to doc section
+- Upgraded to new upstream. Added INSTALL to doc section
 
 * Wed Jan 21 2009 Paul Wouters <paul@xelerance.com> - 1.13-2
 - Upstream made source available :=)
