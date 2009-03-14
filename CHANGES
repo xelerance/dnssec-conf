@@ -1,6 +1,7 @@
 v1.18
-- Added key for .th (Thailand) to testing
 - Fix for when Bind was installed, but Unbound was not [Adam Tkac]
+- Added key for .th (Thailand) to testing
+- Updated all reverse keys for RIPE's reverse zones
 
 v1.17
 - Added --norestart option to ease use of dnssec-configure in initscripts
