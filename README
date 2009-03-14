@@ -54,6 +54,8 @@
 #
 # .gov (production)
 # https://www.dotgov.gov/dnssecinfo.aspx
+# Note: You might not be able to reach this page from outside the US.
+#        This is by (defective) design.
 #
 # The Root zone (test) and other test keys: http://ns.iana.org/
 # disabled because you will have to resolve via their nameserver for
