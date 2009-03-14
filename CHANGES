@@ -1,3 +1,6 @@
+v1.18
+- Added key for .th (Thailand) to testing
+
 v1.17
 - Added --norestart option to ease use of dnssec-configure in initscripts
 - Added support for /etc/sysconfig/ dir when using Fedora/RHEL/CentOS
