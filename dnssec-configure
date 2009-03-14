@@ -377,7 +377,7 @@ def checkBindVersion():
 # check will abort everything if it fails
 def checkConfig(conf, checkprog):
 	if not os.path.isfile(conf):
-		sys.exit("ERROR: %s not found for rewrite")
+		sys.exit("ERROR: %s not found for rewrite"%conf)
 	# *-checkconf better be in our path
 	(status, output) = commands.getstatusoutput("%s %s"%(checkprog,conf))
 	if status != 0:
@@ -636,10 +636,10 @@ def showCurrentConfig(nstype):
 	# if dlv keyword not  present in config, it means disabled
 	dlvStatus    = "disabled"
 
-	# check if valid config first, then we can assume certain things
-	checkUnboundConfig()
 
 	if nstype == "unbound":
+		# check if valid config first, then we can assume certain things
+		checkUnboundConfig()
 		try:
 			fp = open(unboundconf)
 			cnf = fp.readlines()
@@ -673,6 +673,8 @@ def showCurrentConfig(nstype):
 		print "Unbound DLV:%s"%dlvStatus
 
 	elif nstype =="bind":
+		# check if valid config first, then we can assume certain things
+		checkBindConfig()
 		fp = open(namedconf)
 		cnf = fp.readlines()
 		fp.close()
