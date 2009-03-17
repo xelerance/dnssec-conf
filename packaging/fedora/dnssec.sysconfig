@@ -3,5 +3,5 @@
 # See further: http://fedoraproject.org/wiki/Features/DNSSEC
 # Place your own DNSSEC keys in /etc/pki/dnssec-keys/production/
 DNSSEC="on"
-#DLV="dlv.isc.org"
-DLV="off"
+DLV="dlv.isc.org"
+#DLV="off"
