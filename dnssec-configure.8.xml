@@ -42,6 +42,7 @@
     </group>
     <arg choice='opt'>--basedir=<replaceable>&lt;dir&gt;</replaceable></arg>
     <arg choice='opt'>--norestart </arg>
+    <arg choice='opt'>--nocheck </arg>
     <arg choice='opt'>--production </arg>
     <arg choice='opt'>--testing </arg>
     <arg choice='opt'>--harvest </arg>
@@ -185,6 +186,17 @@ cause a loop.
   </listitem>
   </varlistentry>
 
+  <varlistentry>
+  <term><option>--nocheck</option></term>
+  <listitem>
+<para>Do not attempt to run unbound-checkconf or bind-checkconf. This is
+required for calls within package managers such as RPM where at least for
+unbound, we are still missing keys/certs and unbound-checkconf would
+return an error. We cannot generate keys before running unbound-checkconf,
+as we might not have enough entropy resulting in a stalled partial install.
+</para>
+  </listitem>
+  </varlistentry>
 </variablelist>
 
 <para>The following options determine which Trusted Keys to preload with

@@ -53,16 +53,20 @@ global harvest
 harvest = 0
 global restart
 restart = 1
+global nocheck
+nocheck = 0
 
 def usage():
 	print "dnssec-configure: (re)configure the Bind and/or Unbound for DNSSEC and DLV"
 	print "usage: dnssec-configure [-u] [-b] [--dnssec=<on|off>] --dlv=<off|on[dlvzone]>"
 	print "                        [--production] [--testing] [--harvest] [--root]"
+	print "                        [--norestart] [--nocheck]"
 	print ""
 	print "   -s                show current configuration(s)"
 	print "   -b or -n          (re)configure the Bind nameserver (default yes if found)"
 	print "   -u                (re)configure the Unbound nameserver (default yes if found)"
 	print "   --norestart       Do not attempt to restart the DNS resolver daemon"
+	print "   --nocheck         Do not check the resolver's config file before modifying"
 	print ""
 	print "   --dnssec= <on|of>  enable or disable DNSSEC"
 	print "   --dlv= <off|on|dlvname> enable or disable DLV"
@@ -92,6 +96,7 @@ def main(argv=None):
 	global testing
 	global harvest
 	global restart
+	global nocheck
 	global namedconf
 	global unboundconf
 #	if commands.getoutput( "whoami" ) != "root":
@@ -100,7 +105,7 @@ def main(argv=None):
 	if argv is None:
 		argv = sys.argv
 	try:
-		opts, args = getopt.getopt(argv[1:], "sbnuvh1:2:3:456789x", ["show","bind","named", "unbound", "version","help","dnssec=","dlv=","basedir=","production","testing","harvest","root","set=", "query=", "norestart"])
+		opts, args = getopt.getopt(argv[1:], "sbnuvh1:2:3:456789xy", ["show","bind","named", "unbound", "version","help","dnssec=","dlv=","basedir=","production","testing","harvest","root","set=", "query=", "norestart","nocheck"])
 	except getopt.error, msg:
 		#print >>sys.stderr, err.msg
 		print >>sys.stderr, "ERROR parsing options"
@@ -131,7 +136,7 @@ def main(argv=None):
 		
 	for o, a in opts:
 		if o in ("-v", "--version"):
-			print "dnssec-configure version 1.18"
+			print "dnssec-configure version 1.19"
 			print "Author:\n Paul Wouters <paul@xelerance.com>"
 			print "Source : http://www.xelerance.com/software/dnssec-conf/"
 			sys.exit()
@@ -145,6 +150,8 @@ def main(argv=None):
 			unbound = 1
 		if o in ("-x","--norestart"):
 			restart = 0
+		if o in ("-y","--nocheck"):
+			nocheck = 1
 		if o in ("-s","--show"):
 			show = 1
 		if o in ("-3","--basedir"):
@@ -328,11 +335,13 @@ def main(argv=None):
 
 	# we modified the config files, verify and restart (not reload)
 	if bind:
-		checkBindConfig()
+		if not nocheck:
+			checkBindConfig()
 		if restartBind and restart == 1:
 			restartDaemon("named")
 	if unbound:
-		checkUnboundConfig()
+		if not nocheck:
+			checkUnboundConfig()
 		if restartUnbound and restart == 1:
 			restartDaemon("unbound")
 
@@ -523,11 +532,15 @@ def BindSetDNSSEC(yesno,dlvzone):
 	return UpdateConfigFile(namedconf,fname)
 
 def UnboundEnableDNSSEC(dlvzone):
-	checkUnboundConfig()
+	global nocheck
+	if not nocheck:
+		checkUnboundConfig()
 	return UnboundSetDNSSEC("yes",dlvzone)
 
 def UnboundDisableDNSSEC():
-	checkUnboundConfig()
+	global nocheck
+	if not nocheck:
+		checkUnboundConfig()
 	return UnboundSetDNSSEC("no","")
 
 # easiest is to remember is start of server: section
