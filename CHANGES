@@ -1,3 +1,7 @@
+v1.21
+- Enable DLV per default on systems that support /etc/sysconfig/dnssec
+  (Fedora, RHEL, Centos)
+
 v1.20
 - dnssec-configure was not adding the reverse keys and DLV key to the
   named.conf file when enabling DLV for bind.
