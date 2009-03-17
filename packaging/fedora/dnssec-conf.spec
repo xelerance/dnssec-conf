@@ -1,7 +1,7 @@
 Summary: DNSSEC and DLV configuration and priming tool
 Name: dnssec-conf
-Version: 1.17
-Release: 1
+Version: 1.19
+Release: 1%{?dist}
 License: GPLv2+
 Url: http://www.xelerance.com/software/dnssec-conf/
 Source: http://www.xelerance.com/software/%{name}/%{name}-%{version}.tar.gz
@@ -9,7 +9,7 @@ Group: System Environment/Daemons
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch: noarch
 Buildrequires: xmlto
-Requires: python-dns, curl, unbound >= 1.1.1-7
+Requires: python-dns, curl
 #Requires: a caching nameserver
 #Requires bind 9.4.0 if bind is reconfigured.....
 
@@ -32,7 +32,8 @@ make
 %install
 rm -rf ${RPM_BUILD_ROOT}
 make DESTDIR=${RPM_BUILD_ROOT} install
-install -m 0755 packaging/fedora/dnssec.sysconfig %{_sysconfdir}/dnssec
+install -d 0755 ${RPM_BUILD_ROOT}/%{_sysconfdir}/sysconfig
+install -m 0644 packaging/fedora/dnssec.sysconfig ${RPM_BUILD_ROOT}/%{_sysconfdir}/sysconfig/dnssec
 %clean
 rm -rf ${RPM_BUILD_ROOT}
 
@@ -46,11 +47,31 @@ rm -rf ${RPM_BUILD_ROOT}
 %attr(0755,root,root) %dir %{_sysconfdir}/pki/dnssec-keys/testing
 %attr(0755,root,root) %dir %{_sysconfdir}/pki/dnssec-keys/harvest
 %attr(0755,root,root) %dir %{_sysconfdir}/pki/dnssec-keys/dlv
+%attr(0644,root,root) %config(noreplace) %{_sysconfdir}/sysconfig/dnssec
 %{_bindir}/dnskey-pull
 %{_sbindir}/dnssec-configure
 %{_mandir}/*/*
 
 %changelog
+* Tue Mar 17 2009 Paul Wouters <paul@xelerance.com> - 1.19-1
+- Upgraded to 1.19, which adds --nocheck for the unbound post command.
+
+* Sat Mar 14 2009 Paul Wouters <paul@xelerance.com> - 1.18-1
+- Upgraded to 1.18 for new RIPE keys and .th testing key
+- Fix for when Bind is installed but Unbound is not
+- No longer need the patch - upstream committed it.
+
+* Tue Mar 10 2009 Adam Tkac <atkac redhat com> - 1.17-4
+- fixed -b -s command
+- added dist tag
+
+* Tue Mar 10 2009 Paul Wouters <paul@xelerance.com> - 1.17-3
+- Remove require for unbound. It can also be used with just bind,
+  and we don't require it to work.
+
+* Mon Mar 09 2009 Paul Wouters <paul@xelerance.com> - 1.17-2
+- Fix build for /etc/sysconfig/dnssec
+
 * Mon Mar 09 2009 Paul Wouters <paul@xelerance.com> - 1.17-1
 - Upgraded to 1.17. This adds better initscript support and fixes a bug
   when named/unbound were not installed (rhbug 488685)
@@ -58,6 +79,9 @@ rm -rf ${RPM_BUILD_ROOT}
 * Sun Mar 01 2009 Paul Wouters <paul@xelerance.com> - 1.16-1
 - Upgraded to 1.16. This adds the production key for .gov
   See http://dotgov.gov/dnssecinfo.aspx
+
+* Tue Feb 24 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.15-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_11_Mass_Rebuild
 
 * Mon Feb  9 2009 Paul Wouters <paul@xelerance.com> - 1.15-1
 - Upgraded to new upstream. Added INSTALL to doc section
