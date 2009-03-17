@@ -1,3 +1,10 @@
+v1.20
+- dnssec-configure was not adding the reverse keys and DLV key to the
+  named.conf file when enabling DLV for bind.
+- dnssec-configure was not removing the DLV key from named.conf when
+  disabling DLV.
+- Bind did not properly support DLV's other then dlv.isc.org.
+
 v1.19
 - Added --nocheck option to be able to run dnssec-configure in %post of
   specfile, while there are no unbound key/pem files yet, and therefor

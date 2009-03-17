@@ -136,7 +136,7 @@ def main(argv=None):
 		
 	for o, a in opts:
 		if o in ("-v", "--version"):
-			print "dnssec-configure version 1.19"
+			print "dnssec-configure version 1.20"
 			print "Author:\n Paul Wouters <paul@xelerance.com>"
 			print "Source : http://www.xelerance.com/software/dnssec-conf/"
 			sys.exit()
@@ -306,7 +306,8 @@ def main(argv=None):
 		if unbound:
 			UnboundSetOptions(sets)
 		elif bind:
-			BindSetOptions(sets)
+			sys.exit("error: bind daemon not supported for --set")
+			#BindSetOptions(sets)
 		else:
 			sys.exit("error: unknown daemon for --set")
 
@@ -486,6 +487,12 @@ def BindSetDNSSEC(yesno,dlvzone):
 			else:
 				optionscfg[index] = "\tdnssec-lookaside . trust-anchor " + dlvzone + ";\n"
 
+	# check for removing the dlv include
+	for index, item in enumerate(cnf):
+		if 'include "/etc/pki/dnssec-keys/dlv/' in item:
+			if dlvzone == "off" or dlvzone == "":
+				cnf.pop(index)
+
 	# add entry for unfound settings
 	if not enablefound:
 		optionscfg = optionscfg[:-1] + ["\tdnssec-enable %s;\n"%yesno] + [ "};\n" ]
@@ -502,7 +509,10 @@ def BindSetDNSSEC(yesno,dlvzone):
 			print "         dnskey-pull -t -o /etc/pki/dnssec-keys/dlv/%sconf %s' to obtain it"%(dlvzone,dlvzone)
 	if not 'include "/etc/named.dnssec.keys";' in "".join(cnf):
 		cnf = cnf + ['include "/etc/named.dnssec.keys";\n']
-			
+	if dlvzone:
+		if not 'include "/etc/pki/dnssec-keys/dlv/%sconf";'%dlvzone in "".join(cnf):
+			cnf = cnf + ['include "/etc/pki/dnssec-keys/dlv/%sconf";\n'%dlvzone]
+
 
 	(fptmp,fname) = tempfile.mkstemp(".conf")
 	fpnew = os.fdopen(fptmp, 'w+b')
@@ -515,6 +525,7 @@ def BindSetDNSSEC(yesno,dlvzone):
 	todo = []
 	if production:
 		todo += [ "production"]
+		todo += [ "production/reverse"]
 	if testing:
 		todo += [ "testing"]
 	if harvest:

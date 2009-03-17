@@ -1,6 +1,6 @@
 Summary: DNSSEC and DLV configuration and priming tool
 Name: dnssec-conf
-Version: 1.19
+Version: 1.20
 Release: 1%{?dist}
 License: GPLv2+
 Url: http://www.xelerance.com/software/dnssec-conf/
@@ -53,6 +53,9 @@ rm -rf ${RPM_BUILD_ROOT}
 %{_mandir}/*/*
 
 %changelog
+* Tue Mar 17 2009 Paul Wouters <paul@xelerance.com> - 1.20-1
+- Upgraded to 1.20, which fixes DLV support for Bind and reverse keys for Bind
+
 * Tue Mar 17 2009 Paul Wouters <paul@xelerance.com> - 1.19-1
 - Upgraded to 1.19, which adds --nocheck for the unbound post command.
 
