@@ -1,6 +1,6 @@
 Summary: DNSSEC and DLV configuration and priming tool
 Name: dnssec-conf
-Version: 1.20
+Version: 1.21
 Release: 1%{?dist}
 License: GPLv2+
 Url: http://www.xelerance.com/software/dnssec-conf/
@@ -31,7 +31,7 @@ make
 
 %install
 rm -rf ${RPM_BUILD_ROOT}
-make DESTDIR=${RPM_BUILD_ROOT} install
+make PREFIX=${PREFIX} DESTDIR=${RPM_BUILD_ROOT} install
 install -d 0755 ${RPM_BUILD_ROOT}/%{_sysconfdir}/sysconfig
 install -m 0644 packaging/fedora/dnssec.sysconfig ${RPM_BUILD_ROOT}/%{_sysconfdir}/sysconfig/dnssec
 %clean
