@@ -1,12 +1,14 @@
 # A bit overkill, but rpm does not like redirecting output?
 #
 
+PREFIX?=/usr/local
 DESTDIR?=
-ETCDIR?=/etc
-BINDIR?=/usr/bin
-SBINDIR?=/usr/sbin
-MANDIR?=/usr//share/man
-KEYSDIR?=/etc/pki/dnssec-keys
+ETCDIR?=$(DESTDIR)/$(PREFIX)/etc
+KEYSDIR?=$(ETCDIR)/pki/dnssec-keys
+BINDIR?=$(DESTDIR)/$(PREFIX)/bin
+SBINDIR?=$(DESTDIR)/$(PREFIX)/sbin
+MANDIR?=$(DESTDIR)/$(PREFIX)/share/man
+KEYSDIR?=$(ETCDIR)/pki/dnssec-keys
 
 all:	manpages
 
@@ -22,12 +24,12 @@ clean:
 	rm -f *.1 *.8
 
 install:
-	mkdir -m0755 -p $(DESTDIR)/$(BINDIR) $(DESTDIR)/$(SBINDIR) $(DESTDIR)/$(MANDIR)/man1 $(DESTDIR)/$(MANDIR)/man8 $(DESTDIR)/$(KEYSDIR)
+	mkdir -m0755 -p $(DESTDIR)/$(BINDIR) $(DESTDIR)/$(SBINDIR) $(DESTDIR)/$(MANDIR)/man1 $(DESTDIR)/$(MANDIR)/man8 $(KEYSDIR)
 	install -m 0755 dnskey-pull $(DESTDIR)/$(BINDIR)
 	install -m 0755 dnssec-configure $(DESTDIR)/$(SBINDIR)
 	install -m 0644 dnskey-pull.1 $(DESTDIR)/$(MANDIR)/man1/
 	install -m 0644 dnssec-configure.8 $(DESTDIR)/$(MANDIR)/man8/
-	cp -r production testing harvest dlv $(DESTDIR)/$(KEYSDIR)/
+	cp -r production testing harvest dlv $(KEYSDIR)/
 	@echo
 	@echo "Run dnssec-configure to enable one or more Trusted Keys repositories and DNSSEC and/or DLV options."
 	@echo
