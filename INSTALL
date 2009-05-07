@@ -11,6 +11,7 @@ REQUIREMENTS:
 	   - Fedora: yum install python-dns
 	   - Debian: apt-get install python-dnspython   (NOT python-dns!)
 	* curl
+	* xmlto
 	* A DNSSEC capable nameserver, eg:
 	  - Bind 9.3.3+ (but really try to use at least version 9.6.0)
 	  - Unbound
