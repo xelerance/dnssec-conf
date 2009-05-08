@@ -17,10 +17,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-# TODO: allow specifying location of conf files
-# TODO: make work on debian/ubuntu (different way of starting services)
-# TODO: configurable path for /etc/pki/dnssec-keys/
-
 import commands
 import re
 import os
@@ -31,11 +27,12 @@ from stat import *
 
 global namedconf
 namedconf = "unknown"
-namedconfs = ( "/etc/named.conf", "/usr/local/etc/named.conf", "/etc/bind/named.conf", "/etc/named/named.conf","/var/named/named.conf" )
+namedconfs = ( "/etc/bind/named.conf.options", "/etc/bind/named.conf", "/etc/named.conf", "/usr/local/etc/named.conf", "/etc/named/named.conf","/var/named/named.conf" )
 for entry in namedconfs:
 	if os.path.isfile(entry):
 		namedconf = entry
 		break
+
 global unboundconf 
 unboundconf = "unknown"
 unboundconfs = ( "/etc/unbound/unbound.conf", "/usr/local/etc/unbound/unbound.conf", "/usr/local/etc/unbound.conf", "/etc/unbound.conf" )
@@ -43,6 +40,13 @@ for entry in unboundconfs:
 	if os.path.isfile(entry):
 		unboundconf = entry
 		break
+
+global basedir
+if os.path.isfile("/etc/debian_version"):
+	basedir="/etc/dnssec-conf/"
+else:
+	basedir="/etc/pki/dnssec-keys/"
+
 global bversion
 bversion = "unknown"
 global production
@@ -57,6 +61,7 @@ global nocheck
 nocheck = 0
 
 def usage():
+	global basedir
 	print "dnssec-configure: (re)configure the Bind and/or Unbound for DNSSEC and DLV"
 	print "usage: dnssec-configure [-u] [-b] [--dnssec=<on|off>] --dlv=<off|on[dlvzone]>"
 	print "                        [--production] [--testing] [--harvest] [--root]"
@@ -71,7 +76,7 @@ def usage():
 	print "   --dnssec= <on|of>  enable or disable DNSSEC"
 	print "   --dlv= <off|on|dlvname> enable or disable DLV"
 	print "          (default dlv as specified with 'on' is dlv.isc.org)" 
-	print "   --basedir=         basedir for key files, default is /etc/pki/dnssec-keys/"
+	print "   --basedir=         basedir for key files, default is %s"%basedir
 	print "   --production      load production keys into configuration (default yes)"
 	print "   --testing         load testing keys into configuration (default no)"
 	print "   --harvest         load harvest keys into configuration (default no)"
@@ -99,6 +104,7 @@ def main(argv=None):
 	global nocheck
 	global namedconf
 	global unboundconf
+	global basedir
 #	if commands.getoutput( "whoami" ) != "root":
 #		sys.exit("root permission is required  to write config files"
 
@@ -114,7 +120,7 @@ def main(argv=None):
 
 	# parse options
 	dlvzone = "dlv.isc.org"
-	basedir = "/etc/pki/dnssec-keys/"
+	keyfile = "%s/named.dnssec.keys"%basedir
 	# Using conf files for 'grep' will cause failure when using
 	# includes, so we need to go through those as well
 	bind = 0
@@ -136,7 +142,7 @@ def main(argv=None):
 		
 	for o, a in opts:
 		if o in ("-v", "--version"):
-			print "dnssec-configure version 1.20"
+			print "dnssec-configure version 1.21"
 			print "Author:\n Paul Wouters <paul@xelerance.com>"
 			print "Source : http://www.xelerance.com/software/dnssec-conf/"
 			sys.exit()
@@ -339,7 +345,11 @@ def main(argv=None):
 		if not nocheck:
 			checkBindConfig()
 		if restartBind and restart == 1:
-			restartDaemon("named")
+			if os.path.isfile("/etc/debian_version"):
+				bindname = "bind9"
+			else:
+				bindname = "named"
+			restartDaemon(bindname)
 	if unbound:
 		if not nocheck:
 			checkUnboundConfig()
@@ -349,7 +359,11 @@ def main(argv=None):
 
 
 def restartDaemon(daemon):
-	(status, output) = commands.getstatusoutput("/sbin/service %s try-restart"%daemon)
+	if os.path.isfile("/etc/debian_version"):
+		cmd = "/usr/sbin/invoke-rc.d %s force-reload"%daemon
+	else:
+		cmd = "/sbin/service %s try-restart"%daemon
+	(status, output) = commands.getstatusoutput(cmd)
         if status:
                 print "ERROR:\n%s"%output
 
@@ -489,7 +503,7 @@ def BindSetDNSSEC(yesno,dlvzone):
 
 	# check for removing the dlv include
 	for index, item in enumerate(cnf):
-		if 'include "/etc/pki/dnssec-keys/dlv/' in item:
+		if 'include "%s/dlv/'%basedir in item:
 			if dlvzone == "off" or dlvzone == "":
 				cnf.pop(index)
 
@@ -504,14 +518,14 @@ def BindSetDNSSEC(yesno,dlvzone):
 	if dlvzone:
 		if not dlvfound:
 			optionscfg = optionscfg[:-1] + ["\tdnssec-lookaside . trust-anchor %s;\n"%dlvzone]  + [ "};\n" ]
-		if not os.path.isfile("/etc/pki/dnssec-keys/dlv/%sconf"%dlvzone):
-			print "warning: /etc/pki/dnssec-keys/dlv/%sconf not found. If you trust your network use:"%dlvzone
-			print "         dnskey-pull -t -o /etc/pki/dnssec-keys/dlv/%sconf %s' to obtain it"%(dlvzone,dlvzone)
-	if not 'include "/etc/named.dnssec.keys";' in "".join(cnf):
-		cnf = cnf + ['include "/etc/named.dnssec.keys";\n']
+		if not os.path.isfile("%s/dlv/%sconf"%(basedir,dlvzone)):
+			print "warning: %s/dlv/%sconf not found. If you trust your network use:"%(basedir,dlvzone)
+			print "         dnskey-pull -t -o %basedir/dlv/%sconf %s' to obtain it"%(basedir,dlvzone,dlvzone)
+	if not 'include "%s";'%keyfile in "".join(cnf):
+		cnf = cnf + ['include "%s";\n'%keyfile]
 	if dlvzone:
-		if not 'include "/etc/pki/dnssec-keys/dlv/%sconf";'%dlvzone in "".join(cnf):
-			cnf = cnf + ['include "/etc/pki/dnssec-keys/dlv/%sconf";\n'%dlvzone]
+		if not 'include "%s/dlv/%sconf";'%(basedir,dlvzone) in "".join(cnf):
+			cnf = cnf + ['include "%s/dlv/%sconf";\n'%(basedir,dlvzone)]
 
 
 	(fptmp,fname) = tempfile.mkstemp(".conf")
@@ -520,8 +534,8 @@ def BindSetDNSSEC(yesno,dlvzone):
 	fpnew.write("".join(optionscfg))
 	fpnew.write("".join(cnf[(startopt+endopt+1):]))
 	fpnew.close()
-	# before activating new config, rebuild the /etc/named.dnssec.keys file as named also does not support wildcards for includes
-	fpkeys = open("/etc/named.dnssec.keys","w")
+	# before activating new config, rebuild the keyfile file as named also does not support wildcards for includes
+	fpkeys = open(keyfile,"w")
 	todo = []
 	if production:
 		todo += [ "production"]
@@ -532,11 +546,11 @@ def BindSetDNSSEC(yesno,dlvzone):
 		todo += [ "harvest"]
 	if todo:
 		for entry in todo:
-			filelist = os.listdir("/etc/pki/dnssec-keys/%s"%entry)
+			filelist = os.listdir("%s/%s"%(basedir,entry))
 			filelist.sort()
 			for line in filelist:
 				if line[-5:] == ".conf":
-					fpkeys.write('include "/etc/pki/dnssec-keys/%s/%s";\n'%(entry,line))
+					fpkeys.write('include "%s/%s/%s";\n'%(basedir,entry,line))
 	else:
 		fpkeys.write("// dnssec-configure: no keys selected, this should not happen\n")
 	fpkeys.close()
@@ -597,22 +611,22 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 			else:
 				dlvanchorfile = index
 		if re.match("^\s*trusted-keys-file:", item):
-			if "/etc/pki/dnssec-keys/production/*.conf" in item:
+			if "%s/production/*.conf"%basedir in item:
 				prodfound = index
 				if not production:
-					cnf[index] =  '\t# trusted-keys-file: "/etc/pki/dnssec-keys/production/*.conf"\n'
-			elif "/etc/pki/dnssec-keys/production/reverse/*.conf" in item:
+					cnf[index] =  '\t# trusted-keys-file: "%s/production/*.conf"\n'%basedir
+			elif "%s/production/reverse/*.conf"%basedir in item:
 				revfound = index
 				if not production:
-					cnf[index] =  '\t# trusted-keys-file: "/etc/pki/dnssec-keys/reverse/*.conf"\n'
-			elif "/etc/pki/dnssec-keys/testing/*.conf" in item:
+					cnf[index] =  '\t# trusted-keys-file: "%s/reverse/*.conf"\n'%basedir
+			elif "%s/testing/*.conf"%basedir in item:
 				testfound = index
 				if not testing:
-					cnf[index] =  '\t# trusted-keys-file: "/etc/pki/dnssec-keys/testing/*.conf"\n'
-			elif "/etc/pki/dnssec-keys/harvest/*.conf" in item:
+					cnf[index] =  '\t# trusted-keys-file: "%s/testing/*.conf"\n'%basedir
+			elif "%s/harvest/*.conf"%basedir in item:
 				harvestfound = index
 				if not harvest:
-					cnf[index] =  '\t# trusted-keys-file: "/etc/pki/dnssec-keys/harvest/*.conf"\n'
+					cnf[index] =  '\t# trusted-keys-file: "/harvest/*.conf"\n'%basedir
 
 	if permissive:
 		(head,tail) = cnf[permissive].split("val-permissive-mode")
@@ -624,25 +638,25 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 		cnf.insert(serversect+1, "\tval-permissive-mode: %s"%yesno )
 	if dlvzone:
 		if dlvanchorfile:
-			cnf[dlvanchorfile] = '\tdlv-anchor-file: "/etc/pki/dnssec-keys/dlv/%skey"\n'%dlvzone
+			cnf[dlvanchorfile] = '\tdlv-anchor-file: "%s/dlv/%skey"\n'%(basedir,dlvzone)
 		else:
-			cnf.insert(serversect+1, "\tdlv-anchor-file: /etc/pki/dnssec-keys/dlv/%skey\n"%dlvzone)
+			cnf.insert(serversect+1, "\tdlv-anchor-file: %s/dlv/%skey\n"%(basedir,dlvzone))
 
-		if not os.path.isfile("/etc/pki/dnssec-keys/dlv/%skey"%dlvzone):
-			print "warning: /etc/pki/dnssec-keys/dlv/%skey not found. If you trust your network run 'dnskey-pull' to obtain it"%dlvzone
+		if not os.path.isfile("%s/dlv/%skey"%(basedir,dlvzone)):
+			print "warning: %s/dlv/%skey not found. If you trust your network run 'dnskey-pull' to obtain it"%(basedir,dlvzone)
 	else:
 		if dlvanchorfile:
-			cnf[dlvanchorfile] = '\t# dlv-anchor-file: "/etc/pki/dnssec-keys/dlv/%skey"\n'%dlvzone
+			cnf[dlvanchorfile] = '\t# dlv-anchor-file: "%s/dlv/%skey"\n'%(basedir,dlvzone)
 
 	# add potential missing lines to include trusted-keys-file 
 	if not prodfound and production:
-		cnf.insert(serversect+1, '\ttrusted-keys-file: "/etc/pki/dnssec-keys/production/*.conf"\n')
+		cnf.insert(serversect+1, '\ttrusted-keys-file: "%s/production/*.conf"\n'%basedir)
 	if not revfound and production:
-		cnf.insert(serversect+1, '\ttrusted-keys-file: "/etc/pki/dnssec-keys/production/reverse/*.conf"\n')
+		cnf.insert(serversect+1, '\ttrusted-keys-file: "%s/production/reverse/*.conf"\n'%basedir)
 	if not testfound and testing:
-		cnf.insert(serversect+1, '\ttrusted-keys-file: "/etc/pki/dnssec-keys/testing/*.conf"\n')
+		cnf.insert(serversect+1, '\ttrusted-keys-file: "%s/testing/*.conf"\n'%basedir)
 	if not harvestfound and harvest:
-		cnf.insert(serversect+1, '\ttrusted-keys-file: "/etc/pki/dnssec-keys/harvest/*.conf"\n')
+		cnf.insert(serversect+1, '\ttrusted-keys-file: "%s/harvest/*.conf"\n'%basedir)
 	
 	(fptmp,fname) = tempfile.mkstemp(".conf")
 	fpnew = os.fdopen(fptmp, 'w+b')
