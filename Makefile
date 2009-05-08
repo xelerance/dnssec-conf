@@ -8,7 +8,6 @@ KEYSDIR?=$(ETCDIR)/pki/dnssec-keys
 BINDIR?=$(DESTDIR)/$(PREFIX)/bin
 SBINDIR?=$(DESTDIR)/$(PREFIX)/sbin
 MANDIR?=$(DESTDIR)/$(PREFIX)/share/man
-KEYSDIR?=$(ETCDIR)/pki/dnssec-keys
 
 all:	manpages
 

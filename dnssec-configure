@@ -47,6 +47,9 @@ if os.path.isfile("/etc/debian_version"):
 else:
 	basedir="/etc/pki/dnssec-keys/"
 
+global keyfile
+keyfile = "%s/named.dnssec.keys"%basedir
+
 global bversion
 bversion = "unknown"
 global production
@@ -120,7 +123,6 @@ def main(argv=None):
 
 	# parse options
 	dlvzone = "dlv.isc.org"
-	keyfile = "%s/named.dnssec.keys"%basedir
 	# Using conf files for 'grep' will cause failure when using
 	# includes, so we need to go through those as well
 	bind = 0
@@ -446,6 +448,8 @@ def BindSetDNSSEC(yesno,dlvzone):
 	global production
 	global testing
 	global harvest
+	global basedir
+	global keyfile
 	fp = open(namedconf)
 	cnf = fp.readlines()
 	fp.close()

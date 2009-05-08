@@ -31,7 +31,7 @@ make
 
 %install
 rm -rf ${RPM_BUILD_ROOT}
-make PREFIX=%{_prefix} DESTDIR=${RPM_BUILD_ROOT} install
+make PREFIX=%{_prefix} DESTDIR=${RPM_BUILD_ROOT} ETCDIR=${RPM_BUILD_ROOT}/etc install
 install -d 0755 ${RPM_BUILD_ROOT}/%{_sysconfdir}/sysconfig
 install -m 0644 packaging/fedora/dnssec.sysconfig ${RPM_BUILD_ROOT}/%{_sysconfdir}/sysconfig/dnssec
 %clean
@@ -53,6 +53,9 @@ rm -rf ${RPM_BUILD_ROOT}
 %{_mandir}/*/*
 
 %changelog
+* Thu May 07 2009 Paul Wouters <paul@xelerance.com> - 1.21-1
+- upgraded to 1.21
+
 * Tue Mar 17 2009 Paul Wouters <paul@xelerance.com> - 1.20-1
 - Upgraded to 1.20, which fixes DLV support for Bind and reverse keys for Bind
 
