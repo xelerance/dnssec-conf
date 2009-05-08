@@ -24,11 +24,11 @@ clean:
 	rm -f *.1 *.8
 
 install:
-	mkdir -m0755 -p $(DESTDIR)/$(BINDIR) $(DESTDIR)/$(SBINDIR) $(DESTDIR)/$(MANDIR)/man1 $(DESTDIR)/$(MANDIR)/man8 $(KEYSDIR)
-	install -m 0755 dnskey-pull $(DESTDIR)/$(BINDIR)
-	install -m 0755 dnssec-configure $(DESTDIR)/$(SBINDIR)
-	install -m 0644 dnskey-pull.1 $(DESTDIR)/$(MANDIR)/man1/
-	install -m 0644 dnssec-configure.8 $(DESTDIR)/$(MANDIR)/man8/
+	mkdir -m0755 -p $(BINDIR) $(DESTDIR)/$(SBINDIR) $(DESTDIR)/$(MANDIR)/man1 $(DESTDIR)/$(MANDIR)/man8 $(KEYSDIR)
+	install -m 0755 dnskey-pull $(BINDIR)
+	install -m 0755 dnssec-configure $(SBINDIR)
+	install -m 0644 dnskey-pull.1 $(MANDIR)/man1/
+	install -m 0644 dnssec-configure.8 $(MANDIR)/man8/
 	cp -r production testing harvest dlv $(KEYSDIR)/
 	@echo
 	@echo "Run dnssec-configure to enable one or more Trusted Keys repositories and DNSSEC and/or DLV options."

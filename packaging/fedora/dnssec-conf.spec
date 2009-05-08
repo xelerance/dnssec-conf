@@ -31,7 +31,7 @@ make
 
 %install
 rm -rf ${RPM_BUILD_ROOT}
-make PREFIX=${PREFIX} DESTDIR=${RPM_BUILD_ROOT} install
+make PREFIX=%{_prefix} DESTDIR=${RPM_BUILD_ROOT} install
 install -d 0755 ${RPM_BUILD_ROOT}/%{_sysconfdir}/sysconfig
 install -m 0644 packaging/fedora/dnssec.sysconfig ${RPM_BUILD_ROOT}/%{_sysconfdir}/sysconfig/dnssec
 %clean
