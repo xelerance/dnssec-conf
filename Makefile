@@ -24,7 +24,7 @@ clean:
 	rm -f *.1 *.8
 
 install:
-	mkdir -m0755 -p $(BINDIR) $(DESTDIR)/$(SBINDIR) $(DESTDIR)/$(MANDIR)/man1 $(DESTDIR)/$(MANDIR)/man8 $(KEYSDIR)
+	mkdir -m0755 -p $(BINDIR) $(SBINDIR) $(MANDIR)/man1 $(MANDIR)/man8 $(KEYSDIR)
 	install -m 0755 dnskey-pull $(BINDIR)
 	install -m 0755 dnssec-configure $(SBINDIR)
 	install -m 0644 dnskey-pull.1 $(MANDIR)/man1/
