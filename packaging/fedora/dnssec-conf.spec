@@ -53,7 +53,7 @@ rm -rf ${RPM_BUILD_ROOT}
 %{_mandir}/*/*
 
 %changelog
-* Thu May 07 2009 Paul Wouters <paul@xelerance.com> - 1.21-1
+* Sun Jun 14 2009 Paul Wouters <paul@xelerance.com> - 1.21-1
 - upgraded to 1.21
 
 * Tue Mar 17 2009 Paul Wouters <paul@xelerance.com> - 1.20-1
