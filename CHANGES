@@ -1,7 +1,9 @@
 v1.21
-- Fixes for Debian by Ondřej Surý <ondrej@debian.org>
 - Enable DLV per default on systems that support /etc/sysconfig/dnssec
   (Fedora, RHEL, Centos)
+- Fixes for Debian/Ubuntu by Ondřej Surý <ondrej@debian.org>
+- Change default install to /usr/local
+- Added key for .org.
 
 v1.20
 - dnssec-configure was not adding the reverse keys and DLV key to the
