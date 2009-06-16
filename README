@@ -57,6 +57,9 @@
 # Note: You might not be able to reach this page from outside the US.
 #        This is by (defective) design.
 #
+# .org (production signed, not accepting DS records yet)
+# http://pir.org/index.php?db=content/Website&tbl=ORG_Advantage&id=2.4
+#
 # The Root zone (test) and other test keys: http://ns.iana.org/
 # disabled because you will have to resolve via their nameserver for
 # these keys to work.
