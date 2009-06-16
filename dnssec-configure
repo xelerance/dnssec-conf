@@ -535,12 +535,14 @@ def BindSetDNSSEC(yesno,dlvzone):
 			optionscfg = optionscfg[:-1] + ["\tdnssec-lookaside . trust-anchor %s;\n"%dlvzone]  + [ "};\n" ]
 		if not os.path.isfile("%s/dlv/%sconf"%(basedir,dlvzone)):
 			print "warning: %s/dlv/%sconf not found. If you trust your network use:"%(basedir,dlvzone)
-			print "         dnskey-pull -t -o %basedir/dlv/%sconf %s' to obtain it"%(basedir,dlvzone,dlvzone)
-	if not 'include "%s";'%keyfile in "".join(cnf):
+			print "         dnskey-pull -t -o %sdlv/%sconf %s' to obtain it"%(basedir,dlvzone,dlvzone)
+	# check for older versions that used a double slash too
+	if not 'include "%s";'%keyfile in "".join(cnf) and not 'include "%s/named.dnssec.keys";'%basedir in "".join(cnf):
 		cnf = cnf + ['include "%s";\n'%keyfile]
 	if dlvzone:
-		if not 'include "%s/dlv/%sconf";'%(basedir,dlvzone) in "".join(cnf):
-			cnf = cnf + ['include "%s/dlv/%sconf";\n'%(basedir,dlvzone)]
+		# same here :(
+		if not 'include "%sdlv/%sconf";'%(basedir,dlvzone) in "".join(cnf) and not 'include "%s/dlv/%sconf";'%(basedir,dlvzone) in "".join(cnf):
+			cnf = cnf + ['include "%sdlv/%sconf";\n'%(basedir,dlvzone)]
 
 
 	(fptmp,fname) = tempfile.mkstemp(".conf")
@@ -879,16 +881,13 @@ def ParseNamed():
 	toplevel = Forward()
 	comment1 = Group(Word("//") + restOfLine)
 	comment2 = Group(Word("#") + restOfLine)
-	comment = comment1 | comment2
+	comment3 = cStyleComment
+	comment = Group(comment1 | comment2 | comment3)
 	value = Word(alphanums + "-_.*!/:") | quotedString
 	simple = Group(value + ZeroOrMore(value) + ";")
 	statement = Group(value + ZeroOrMore(value) + "{" + Optional(toplevel) + "}" + ";")
-	listenStatement  = Group( Optional( Word("port") + integer) + "{" + Optional(toplevel) + "}" + ";")
-	toplevel << OneOrMore(comment | listenStatement | simple | statement)
+	toplevel << OneOrMore(comment | simple | statement)
 	parser = toplevel
-	# this sadly causes /* */ comments to be removed.
-	# Multi line comments are hard to parse :P
-	parser.ignore(cStyleComment)
 
 	# read the file into tokens
 	global namedconf
