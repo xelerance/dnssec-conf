@@ -24,6 +24,15 @@ import sys
 import getopt
 import tempfile,shutil
 from stat import *
+try:
+	from pyparsing import *
+except:
+        print "dnssec-configure requires the pyparser package from http://pyparsing.wikispaces.com"
+        print "Fedora/EPEL: yum install pyparsing"
+        print "Debian/Ubuntu: apt-get install python-pyparsing"
+        sys.exit()
+
+
 
 global namedconf
 namedconf = "unknown"
@@ -558,6 +567,8 @@ def BindSetDNSSEC(yesno,dlvzone):
 	else:
 		fpkeys.write("// dnssec-configure: no keys selected, this should not happen\n")
 	fpkeys.close()
+	# double check we did not mangle the config file
+	checkConfig(fname,"named-checkconf")
 	return UpdateConfigFile(namedconf,fname)
 
 def UnboundEnableDNSSEC(dlvzone):
@@ -840,6 +851,50 @@ def UnboundSetOptions(sets):
 		print cnf
 	fpnew.close()
 	return UpdateConfigFile(unboundconf,fname)
+
+def parseStatement(parsed,depth=0):
+        build = ""
+        for p in parsed:
+                if type(p) == type("str"):
+                        if p == ";":
+                                # no space before ; and a return afterwards
+                                build = "%s;"%build.rstrip()
+                        elif p =="}":
+                                # \n before, plus indentation
+                                build += "\n%s%s"%("\t"*(depth-1),p)
+                        else:
+                                build += "%s "%p
+                else:
+                        # is list
+                        build += "\n%s"%("\t"*depth) + parseStatement(p,depth+1)
+        return build
+
+# The pyparsing named.conf parser. Based on the version by Seo Sanghyeon
+# See: http://pyparsing.wikispaces.com/WhosUsingPyparsing#BIND_named_conf
+def ParseNamed():
+	# Define the grammar
+	integer = Word(nums) 
+	toplevel = Forward()
+	comment1 = Group(Word("//") + restOfLine)
+	comment2 = Group(Word("#") + restOfLine)
+	comment = comment1 | comment2
+	value = Word(alphanums + "-_.*!/:") | quotedString
+	simple = Group(value + ZeroOrMore(value) + ";")
+	statement = Group(value + ZeroOrMore(value) + "{" + Optional(toplevel) + "}" + ";")
+	listenStatement  = Group( Optional( Word("port") + integer) + "{" + Optional(toplevel) + "}" + ";")
+	toplevel << OneOrMore(comment | listenStatement | simple | statement)
+	parser = toplevel
+	# this sadly causes /* */ comments to be removed.
+	# Multi line comments are hard to parse :P
+	parser.ignore(cStyleComment)
+
+	# read the file into tokens
+	global namedconf
+	res = parser.parseFile(namedconf)
+	results = res.asList()
+	content = parseStatement(results)
+
+	# TODO: find options section and check/modify dnssec options
 
 if __name__ == "__main__":
 	sys.exit(main())

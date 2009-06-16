@@ -9,7 +9,7 @@ Group: System Environment/Daemons
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch: noarch
 Buildrequires: xmlto
-Requires: python-dns, curl
+Requires: python-dns, curl, pyparsing
 #Requires: a caching nameserver
 #Requires bind 9.4.0 if bind is reconfigured.....
 
