@@ -71,6 +71,12 @@ global restart
 restart = 1
 global nocheck
 nocheck = 0
+global dnssec
+dnssec = -1
+global dlv
+dlv = -1
+global dlvzone
+dlvzone = "dlv.isc.org"
 
 def usage():
 	global basedir
@@ -117,6 +123,9 @@ def main(argv=None):
 	global namedconf
 	global unboundconf
 	global basedir
+	global dnssec
+	global dlv
+	global dlvzone
 #	if commands.getoutput( "whoami" ) != "root":
 #		sys.exit("root permission is required  to write config files"
 
@@ -131,13 +140,10 @@ def main(argv=None):
 		sys.exit(2)
 
 	# parse options
-	dlvzone = "dlv.isc.org"
 	# Using conf files for 'grep' will cause failure when using
 	# includes, so we need to go through those as well
 	bind = 0
 	unbound = 0
-	dnssec = -1
-	dlv = -1
 	production = 0
 	testing = 0
 	harvest = 0
@@ -330,28 +336,21 @@ def main(argv=None):
 		else:
 			sys.exit("error: unknown daemon for --set")
 
-	if dnssec:
-		if not dlv:
-			dlvzone = ""
-		else:
-			# fix dots, eg ".arpa" and "arpa" to "arpa."
-			if dlvzone != ".":
-				if dlvzone[-1] != ".":
-					dlvzone = dlvzone + "."
-				if dlvzone[0] == ".":
-					dlvzone = dlvzone[1:]
-
-		#print "Enabling DNSSEC for: %s"%software
-		if bind:
-			restartBind = BindEnableDNSSEC(dlvzone)
-		if unbound:
-			restartUnbound = UnboundEnableDNSSEC(dlvzone)
+	if not dlv:
+		dlvzone = ""
 	else:
-		#print "Disabling DNSSEC for: %s"%software
-		if bind:
-			restartBind = BindDisableDNSSEC()
-		if unbound:
-			restartUnbound = UnboundDisableDNSSEC()
+		# fix dots, eg ".arpa" and "arpa" to "arpa."
+		if dlvzone != ".":
+			if dlvzone[-1] != ".":
+				dlvzone = dlvzone + "."
+			if dlvzone[0] == ".":
+				dlvzone = dlvzone[1:]
+
+	#print "Enabling DNSSEC for: %s"%software
+	if bind:
+		restartBind = BindSetDNSSEC()
+	if unbound:
+		restartUnbound = UnboundSetDNSSEC()
 
 	# we modified the config files, verify and restart (not reload)
 	if bind:
@@ -442,18 +441,7 @@ def UpdateConfigFile(cfgfile,tmpfile):
 	os.unlink(tmpfile)
 	return 1
 
-# DNSSEC rewrite functions
-def BindEnableDNSSEC(dlvzone):
-	checkBindConfig()
-	checkBindVersion()
-	return BindSetDNSSEC("yes",dlvzone)
-
-def BindDisableDNSSEC():
-	checkBindConfig()
-	checkBindVersion()
-	return BindSetDNSSEC("no","")
-
-def BindSetDNSSEC(yesno,dlvzone):
+def BindSetDNSSEC():
 	global namedconf
 	global bversion
 	global production
@@ -461,96 +449,45 @@ def BindSetDNSSEC(yesno,dlvzone):
 	global harvest
 	global basedir
 	global keyfile
-	fp = open(namedconf)
-	cnf = fp.readlines()
-	fp.close()
+	global dnssec
+	global dlv
+	global dlvzone
 
-	# find options sections. Assumptions for now: options { start on newline
-	# and first }; on a line by itself is the options closing tag
-	startopt = 0
-	endopt = 0
-	for index, item in enumerate(cnf):
-        	if re.match("^\s*options\s*{",item):
-			startopt = index
-			break
-	if not startopt:
-		# TODO: write to stderr
-		print "dnssec-configure: Bind: options section not found"
-		return 0
+	checkBindConfig()
+	checkBindVersion()
 
-	for index,item in enumerate(cnf[startopt:]):
-		if re.match("^\s*}\s*;\s*\n*$",item):
-			endopt = index
-			break
-	if not endopt:
-		print cnf[14:]
-		# TODO: write to stderr
-		print "dnssec-configure: Bind: options section not found"
-		return 0
+	# The pyparsing named.conf parser. Based on the version by Seo Sanghyeon
+	# See: http://pyparsing.wikispaces.com/WhosUsingPyparsing#BIND_named_conf
+	# Define the grammar
+	integer = Word(nums) 
+	toplevel = Forward()
+	comment1 = Group(Word("//") + restOfLine)
+	comment2 = Group(Word("#") + restOfLine)
+	comment3 = cStyleComment
+	comment = Group(comment1 | comment2 | comment3)
+	value = Word(alphanums + "-_.*!/:") | quotedString
+	simple = Group(value + ZeroOrMore(value) + ";")
+	statement = Group(value + ZeroOrMore(value) + "{" + Optional(toplevel) + "}" + ";")
+	toplevel << OneOrMore(comment | simple | statement)
+	parser = toplevel
 
-	optionscfg = cnf[startopt:startopt+endopt+1] 
+	# read the file into tokens
+	res = parser.parseFile(namedconf)
+	results = res.asList()
+	# the next call will parse and set the options and return a new named.conf
+	content = parseStatement(results)
 
-	enablefound = 0 
-	validationfound = 0
-	dlvfound = 0
-	prodfound = 0
-	testfound = 0
-	harvestfound = 0
-	
-	for index,item in enumerate(optionscfg):
-		# change entry if there
-		if "dnssec-enable" in item:
-			enablefound = 1
-			optionscfg[index] = "\tdnssec-enable %s;\n"%yesno
-		if "dnssec-validation" in item:
-			validationfound = 1
-			if bversion == "newstyle":
-				optionscfg[index] = "\tdnssec-validation %s;\n"%yesno
-			else:
-				optionscfg[index] = "\t// only in bind 9.3.3 and newer: dnssec-validation %s;\n"%yesno
-		if "dnssec-lookaside" in item:
-			dlvfound = 1
-			if not dlvzone:
-				vals = item.split("dnssec-lookaside")[1]
-				optionscfg[index] = "\t// dnssec-lookaside%s"%vals
-			else:
-				optionscfg[index] = "\tdnssec-lookaside . trust-anchor " + dlvzone + ";\n"
-
-	# check for removing the dlv include
-	for index, item in enumerate(cnf):
-		if 'include "%sdlv/'%basedir in item or 'include "%s/dlv/'%basedir in item:
-			if dlvzone == "off" or dlvzone == "":
-				cnf.pop(index)
-
-	# add entry for unfound settings
-	if not enablefound:
-		optionscfg = optionscfg[:-1] + ["\tdnssec-enable %s;\n"%yesno] + [ "};\n" ]
-	if not validationfound:
-		if bversion == "newstyle":
-			optionscfg = optionscfg[:-1] + ["\tdnssec-validation %s;\n"%yesno]  + [ "};\n" ]
-		else:
-			optionscfg = optionscfg[:-1] + ["\t// only in bind 9.3.3 and newer: dnssec-validation %s;\n"%yesno]  + [ "};\n" ]
-	if dlvzone:
-		if not dlvfound:
-			optionscfg = optionscfg[:-1] + ["\tdnssec-lookaside . trust-anchor %s;\n"%dlvzone]  + [ "};\n" ]
-		if not os.path.isfile("%s/dlv/%sconf"%(basedir,dlvzone)):
-			print "warning: %s/dlv/%sconf not found. If you trust your network use:"%(basedir,dlvzone)
-			print "         dnskey-pull -t -o %sdlv/%sconf %s' to obtain it"%(basedir,dlvzone,dlvzone)
-	# check for older versions that used a double slash too
-	if not 'include "%s";'%keyfile in "".join(cnf) and not 'include "%s/named.dnssec.keys";'%basedir in "".join(cnf):
-		cnf = cnf + ['include "%s";\n'%keyfile]
+	# include keys when dnssec is enabled
+	if dnssec:
+		# check for older versions that used a double slash too
+		if not 'include "%s";'%keyfile in content and not 'include "%s/named.dnssec.keys";'%basedir in content:
+			content += '\ninclude "%s";\n'%keyfile
+	# include dlv key when dlv is enabled
 	if dlvzone:
 		# same here :(
-		if not 'include "%sdlv/%sconf";'%(basedir,dlvzone) in "".join(cnf) and not 'include "%s/dlv/%sconf";'%(basedir,dlvzone) in "".join(cnf):
-			cnf = cnf + ['include "%sdlv/%sconf";\n'%(basedir,dlvzone)]
+		if not 'include "%sdlv/%sconf";'%(basedir,dlvzone) in content and not 'include "%s/dlv/%sconf";'%(basedir,dlvzone) in content:
+			content += '\ninclude "%sdlv/%sconf";\n'%(basedir,dlvzone)
 
-
-	(fptmp,fname) = tempfile.mkstemp(".conf")
-	fpnew = os.fdopen(fptmp, 'w+b')
-	fpnew.write("".join(cnf[0:startopt]))
-	fpnew.write("".join(optionscfg))
-	fpnew.write("".join(cnf[(startopt+endopt+1):]))
-	fpnew.close()
 	# before activating new config, rebuild the keyfile file as named also does not support wildcards for includes
 	fpkeys = open(keyfile,"w")
 	todo = []
@@ -563,37 +500,40 @@ def BindSetDNSSEC(yesno,dlvzone):
 		todo += [ "harvest"]
 	if todo:
 		for entry in todo:
-			filelist = os.listdir("%s/%s"%(basedir,entry))
+			filelist = os.listdir("%s%s"%(basedir,entry))
 			filelist.sort()
 			for line in filelist:
 				if line[-5:] == ".conf":
-					fpkeys.write('include "%s/%s/%s";\n'%(basedir,entry,line))
+					fpkeys.write('include "%s%s/%s";\n'%(basedir,entry,line))
 	else:
 		fpkeys.write("// dnssec-configure: no keys selected, this should not happen\n")
 	fpkeys.close()
 	# double check we did not mangle the config file
+	(fptmp,fname) = tempfile.mkstemp(".conf")
+	fpnew = os.fdopen(fptmp, 'w+b')
+	try:
+		fpnew.write(content+"\n")
+	except:
+		print "BROKE here"
+	fpnew.close()
 	checkConfig(fname,"named-checkconf")
 	return UpdateConfigFile(namedconf,fname)
 
-def UnboundEnableDNSSEC(dlvzone):
-	global nocheck
-	if not nocheck:
-		checkUnboundConfig()
-	return UnboundSetDNSSEC("yes",dlvzone)
-
-def UnboundDisableDNSSEC():
-	global nocheck
-	if not nocheck:
-		checkUnboundConfig()
-	return UnboundSetDNSSEC("no","")
-
 # easiest is to remember is start of server: section
 #val-permissive-mode: yes
-def UnboundSetDNSSEC(yesno,dlvzone):
+def UnboundSetDNSSEC():
 	global unboundconf
 	global production
 	global testing
 	global harvest
+	global nocheck
+	global dnssec
+	global dlv
+	global dlvzone
+
+	if not nocheck:
+		checkUnboundConfig()
+
 	try:
 		fp = open(unboundconf)
 		cnf = fp.readlines()
@@ -601,7 +541,7 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 	except:
 		sys.exit("error: failed to open %s"%unboundconf)
 	# flip the yesno arround because we say 'yes' to disable dnssec
-	if yesno == "yes":
+	if dnssec:
 		yesno = "no"
 	else:
 		yesno = "yes"
@@ -630,22 +570,22 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 			else:
 				dlvanchorfile = index
 		if re.match("^\s*trusted-keys-file:", item):
-			if "%s/production/*.conf"%basedir in item:
+			if "%sproduction/*.conf"%basedir in item:
 				prodfound = index
 				if not production:
-					cnf[index] =  '\t# trusted-keys-file: "%s/production/*.conf"\n'%basedir
-			elif "%s/production/reverse/*.conf"%basedir in item:
+					cnf[index] =  '\t# trusted-keys-file: "%sproduction/*.conf"\n'%basedir
+			elif "%sproduction/reverse/*.conf"%basedir in item:
 				revfound = index
 				if not production:
-					cnf[index] =  '\t# trusted-keys-file: "%s/reverse/*.conf"\n'%basedir
-			elif "%s/testing/*.conf"%basedir in item:
+					cnf[index] =  '\t# trusted-keys-file: "%sproduction/reverse/*.conf"\n'%basedir
+			elif "%stesting/*.conf"%basedir in item:
 				testfound = index
 				if not testing:
-					cnf[index] =  '\t# trusted-keys-file: "%s/testing/*.conf"\n'%basedir
-			elif "%s/harvest/*.conf"%basedir in item:
+					cnf[index] =  '\t# trusted-keys-file: "%stesting/*.conf"\n'%basedir
+			elif "%sharvest/*.conf"%basedir in item:
 				harvestfound = index
 				if not harvest:
-					cnf[index] =  '\t# trusted-keys-file: "/harvest/*.conf"\n'%basedir
+					cnf[index] =  '\t# trusted-keys-file: "%sharvest/*.conf"\n'%basedir
 
 	if permissive:
 		(head,tail) = cnf[permissive].split("val-permissive-mode")
@@ -655,27 +595,28 @@ def UnboundSetDNSSEC(yesno,dlvzone):
 		cnf[commentpermissive] = "%sval-permissive-mode: %s\n"%(re.sub("#","",head),yesno)
 	else:
 		cnf.insert(serversect+1, "\tval-permissive-mode: %s"%yesno )
-	if dlvzone:
+	if dlv:
 		if dlvanchorfile:
-			cnf[dlvanchorfile] = '\tdlv-anchor-file: "%s/dlv/%skey"\n'%(basedir,dlvzone)
+			cnf[dlvanchorfile] = '\tdlv-anchor-file: "%sdlv/%skey"\n'%(basedir,dlvzone)
 		else:
-			cnf.insert(serversect+1, "\tdlv-anchor-file: %s/dlv/%skey\n"%(basedir,dlvzone))
+			cnf.insert(serversect+1, "\tdlv-anchor-file: %sdlv/%skey\n"%(basedir,dlvzone))
 
-		if not os.path.isfile("%s/dlv/%skey"%(basedir,dlvzone)):
-			print "warning: %s/dlv/%skey not found. If you trust your network run 'dnskey-pull' to obtain it"%(basedir,dlvzone)
+		if not os.path.isfile("%sdlv/%skey"%(basedir,dlvzone)):
+			print "ERROR for unbound: %sdlv/%skey not found. If you trust your network run 'dnskey-pull' to obtain it"%(basedir,dlvzone)
+			return
 	else:
 		if dlvanchorfile:
-			cnf[dlvanchorfile] = '\t# dlv-anchor-file: "%s/dlv/%skey"\n'%(basedir,dlvzone)
+			cnf[dlvanchorfile] = '\t# dlv-anchor-file: "%sdlv/%skey"\n'%(basedir,dlvzone)
 
 	# add potential missing lines to include trusted-keys-file 
 	if not prodfound and production:
-		cnf.insert(serversect+1, '\ttrusted-keys-file: "%s/production/*.conf"\n'%basedir)
+		cnf.insert(serversect+1, '\ttrusted-keys-file: "%sproduction/*.conf"\n'%basedir)
 	if not revfound and production:
-		cnf.insert(serversect+1, '\ttrusted-keys-file: "%s/production/reverse/*.conf"\n'%basedir)
+		cnf.insert(serversect+1, '\ttrusted-keys-file: "%sproduction/reverse/*.conf"\n'%basedir)
 	if not testfound and testing:
-		cnf.insert(serversect+1, '\ttrusted-keys-file: "%s/testing/*.conf"\n'%basedir)
+		cnf.insert(serversect+1, '\ttrusted-keys-file: "%stesting/*.conf"\n'%basedir)
 	if not harvestfound and harvest:
-		cnf.insert(serversect+1, '\ttrusted-keys-file: "%s/harvest/*.conf"\n'%basedir)
+		cnf.insert(serversect+1, '\ttrusted-keys-file: "%sharvest/*.conf"\n'%basedir)
 	
 	(fptmp,fname) = tempfile.mkstemp(".conf")
 	fpnew = os.fdopen(fptmp, 'w+b')
@@ -856,46 +797,64 @@ def UnboundSetOptions(sets):
 	fpnew.close()
 	return UpdateConfigFile(unboundconf,fname)
 
-def parseStatement(parsed,depth=0):
+def parseStatement(parsed,depth=0,opt=0):
+	global dnssec
+	global dlv
+	global dlvzone
         build = ""
+        if opt:
+                if parsed[0] == "dnssec-enable":
+			if dnssec:
+                        	return "dnssec-enable yes;"
+			else:
+				return "dnssec-enable no;"
+                if parsed[0] == "dnssec-validation":
+			if dnssec:
+                        	return "dnssec-validation yes;"
+			else:
+				return "dnssec-validation no;"
+                if parsed[0] == "dnssec-lookaside":
+                        if dlv:
+				return "dnssec-lookaside . trust-anchor %s;"%dlvzone
+			else:
+				return "// %s"%" ".join(parsed)
         for p in parsed:
                 if type(p) == type("str"):
+                        # dnssec processing
+                        if p == "options":
+                                # entering options section
+                                opt=1
+                        # write out results
                         if p == ";":
                                 # no space before ; and a return afterwards
                                 build = "%s;"%build.rstrip()
                         elif p =="}":
                                 # \n before, plus indentation
                                 build += "\n%s%s"%("\t"*(depth-1),p)
+                        elif p[-2:] == '*/':
+                                # \n after, plus indentation
+                                build += "%s\n%s"%(p,"\t"*(depth-1))
                         else:
-                                build += "%s "%p
+                                build += "%s "%p.lstrip(" ")
                 else:
                         # is list
-                        build += "\n%s"%("\t"*depth) + parseStatement(p,depth+1)
-        return build
+                        remainder = parseStatement(p,depth+1,opt)
+			if opt:
+				#if we did not find our options, add them here.
+				print "would add dnssec/dlv options to section options"
+                        if remainder.lstrip()[0]=='/':
+                                build += "\n%s"%remainder
+                        else:   
+                                build += "\n%s"%("\t"*depth) + remainder
 
-# The pyparsing named.conf parser. Based on the version by Seo Sanghyeon
-# See: http://pyparsing.wikispaces.com/WhosUsingPyparsing#BIND_named_conf
-def ParseNamed():
-	# Define the grammar
-	integer = Word(nums) 
-	toplevel = Forward()
-	comment1 = Group(Word("//") + restOfLine)
-	comment2 = Group(Word("#") + restOfLine)
-	comment3 = cStyleComment
-	comment = Group(comment1 | comment2 | comment3)
-	value = Word(alphanums + "-_.*!/:") | quotedString
-	simple = Group(value + ZeroOrMore(value) + ";")
-	statement = Group(value + ZeroOrMore(value) + "{" + Optional(toplevel) + "}" + ";")
-	toplevel << OneOrMore(comment | simple | statement)
-	parser = toplevel
+	result = re.sub("// \n","//\n", re.sub(" \n","\n", re.sub("\n\n","\n", build)))
 
-	# read the file into tokens
-	global namedconf
-	res = parser.parseFile(namedconf)
-	results = res.asList()
-	content = parseStatement(results)
+        if depth==0:
+                # don't return the 1st line, it's an inserted empty \n
+                return result[1:]
+        else:
+                return result
 
-	# TODO: find options section and check/modify dnssec options
 
 if __name__ == "__main__":
 	sys.exit(main())
