@@ -57,7 +57,7 @@ else:
 	basedir="/etc/pki/dnssec-keys/"
 
 global keyfile
-keyfile = "%s/named.dnssec.keys"%basedir
+keyfile = "%snamed.dnssec.keys"%basedir
 
 global bversion
 bversion = "unknown"
@@ -177,6 +177,8 @@ def main(argv=None):
 				usage()
 				sys.exit()
 			else:
+				if a[-1] != '/':
+					a += "/"
 				basedir = a
 		if o in ("--production"):
 			production = 1
@@ -516,7 +518,7 @@ def BindSetDNSSEC(yesno,dlvzone):
 
 	# check for removing the dlv include
 	for index, item in enumerate(cnf):
-		if 'include "%s/dlv/'%basedir in item:
+		if 'include "%sdlv/'%basedir in item or 'include "%s/dlv/'%basedir in item:
 			if dlvzone == "off" or dlvzone == "":
 				cnf.pop(index)
 
