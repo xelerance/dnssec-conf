@@ -162,7 +162,7 @@ def main(argv=None):
 		
 	for o, a in opts:
 		if o in ("-v", "--version"):
-			print "dnssec-configure version 1.21"
+			print "dnssec-configure version 1.22"
 			print "Author:\n Paul Wouters <paul@xelerance.com>"
 			print "Source : http://www.xelerance.com/software/dnssec-conf/"
 			sys.exit()
