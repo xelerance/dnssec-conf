@@ -24,6 +24,9 @@ import sys
 import getopt
 import tempfile,shutil
 from stat import *
+
+#import pprint 
+
 try:
 	from pyparsing import *
 except:
@@ -797,23 +800,38 @@ def UnboundSetOptions(sets):
 	fpnew.close()
 	return UpdateConfigFile(unboundconf,fname)
 
+# ugly hack with globals...
+global foundDNSSEC
+foundDNSSEC = False
+global foundDLV
+foundDLV = False
+global foundVAL
+foundVAL = False
+
 def parseStatement(parsed,depth=0,opt=0):
 	global dnssec
 	global dlv
 	global dlvzone
+	global foundDNSSEC
+	global foundDLV
+	global foundVAL
         build = ""
-        if opt:
+        if True:
+		# todo: optimize with if not foundDNSSEC etc
                 if parsed[0] == "dnssec-enable":
+			foundDNSSEC = True
 			if dnssec:
                         	return "dnssec-enable yes;"
 			else:
 				return "dnssec-enable no;"
                 if parsed[0] == "dnssec-validation":
+			foundVAL = True
 			if dnssec:
                         	return "dnssec-validation yes;"
 			else:
 				return "dnssec-validation no;"
                 if parsed[0] == "dnssec-lookaside":
+			foundDLV = True
                         if dlv:
 				return "dnssec-lookaside . trust-anchor %s;"%dlvzone
 			else:
@@ -824,8 +842,9 @@ def parseStatement(parsed,depth=0,opt=0):
                         if p == "options":
                                 # entering options section
                                 opt=1
+				build += "options "
                         # write out results
-                        if p == ";":
+                        elif p == ";":
                                 # no space before ; and a return afterwards
                                 build = "%s;"%build.rstrip()
                         elif p =="}":
@@ -838,14 +857,24 @@ def parseStatement(parsed,depth=0,opt=0):
                                 build += "%s "%p.lstrip(" ")
                 else:
                         # is list
-                        remainder = parseStatement(p,depth+1,opt)
-			if opt:
-				#if we did not find our options, add them here.
-				print "would add dnssec/dlv options to section options"
+                        remainder = parseStatement(p,depth+1,0)
+			#pprint.pprint(remainder)
+
                         if remainder.lstrip()[0]=='/':
                                 build += "\n%s"%remainder
                         else:   
                                 build += "\n%s"%("\t"*depth) + remainder
+	if opt:
+		if dnssec:
+			# if found, cut the ending of the options section, add option and add a new ending section
+			if not foundDNSSEC:
+				build = build[:-3] + "\n%s"%("\t"*depth) + "dnssec-enable yes;\n};"
+			if not foundVAL:
+				build = build[:-3] + "\n%s"%("\t"*depth) + "dnssec-validation yes;\n};"
+			if dlv:
+				if not foundDLV:
+					build = build[:-3] + "\n%s"%("\t"*depth) + "dnssec-lookaside . trust-anchor %s;\n};"%dlvzone 
+
 
 	result = re.sub("// \n","//\n", re.sub(" \n","\n", re.sub("\n\n","\n", build)))
 
