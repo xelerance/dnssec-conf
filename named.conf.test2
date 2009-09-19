@@ -1,0 +1,52 @@
+// BIND configuration file for generic hosts
+
+logging {
+	category	lame-servers	{ null; };
+	category	edns-disabled	{ null; };
+};
+
+options {
+	directory "/tmp/";
+	datasize 64M;
+	notify yes;
+
+        // Use the local services first!
+	forward first;
+	forwarders { 198.182.196.1; };
+	sortlist {
+		{ localhost; localnets; };
+		{ localnets; };
+};
+
+        // Restrict access to permitted hosts
+        allow-query {
+			127.0.0.1;
+			198.182.196/24;
+			199.184.252/24;
+			199.249.150/24;
+			203.226.93/24;
+	};
+        allow-recursion {
+			127.0.0.1;
+			198.182.196/24;
+			199.184.252/24;
+			199.249.150/24;
+			203.226.93/24;
+	};
+        allow-transfer {
+			127.0.0.1;       // localhost
+			208.234.1.34;    // ns0.aitcom.net
+			198.182.196/24;
+			199.184.252/24;
+			199.249.150/24;
+			203.226.93/24;
+	};
+};
+
+controls {
+	inet 127.0.0.1 allow { localhost; } keys { rndckey; };
+};
+
+// Each host has it's own key file
+include "/etc/rndc.key";
+
