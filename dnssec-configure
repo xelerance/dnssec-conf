@@ -39,7 +39,7 @@ except:
 
 global namedconf
 namedconf = "unknown"
-namedconfs = ( "/etc/bind/named.conf.options", "/etc/bind/named.conf", "/etc/named.conf", "/usr/local/etc/named.conf", "/etc/named/named.conf","/var/named/named.conf" )
+namedconfs = ( "named.conf","/etc/bind/named.conf.options", "/etc/bind/named.conf", "/etc/named.conf", "/usr/local/etc/named.conf", "/etc/named/named.conf","/var/named/named.conf" )
 for entry in namedconfs:
 	if os.path.isfile(entry):
 		namedconf = entry
@@ -462,23 +462,38 @@ def BindSetDNSSEC():
 	# The pyparsing named.conf parser. Based on the version by Seo Sanghyeon
 	# See: http://pyparsing.wikispaces.com/WhosUsingPyparsing#BIND_named_conf
 	# Define the grammar
-	integer = Word(nums) 
 	toplevel = Forward()
-	comment1 = Group(Word("//") + restOfLine)
-	comment2 = Group(Word("#") + restOfLine)
-	comment3 = cStyleComment
-	comment = Group(comment1 | comment2 | comment3)
-	value = Word(alphanums + "-_.*!/:") | quotedString
-	simple = Group(value + ZeroOrMore(value) + ";")
-	statement = Group(value + ZeroOrMore(value) + "{" + Optional(toplevel) + "}" + ";")
-	toplevel << OneOrMore(comment | simple | statement)
-	parser = toplevel
+	comment = cppStyleComment.setName("bindcomment")
+	value = (Word(alphanums + "-_.*!/:") | quotedString).setName("bindvalue")
+	simple = Group(value + ZeroOrMore(value) + ";").setName("bindsetting")
+	statement = Group( ZeroOrMore(value) + "{" + Optional(toplevel) + "}" + ";").setName("bindstatement")
+	statementstupid = Group( value + "{" + Optional(toplevel) + "}" + value + "{" + Optional(toplevel) + "}" +";")
+	statements = Group(OneOrMore(statement|statementstupid)).setName("bindstatements")
+	toplevel << OneOrMore(comment | simple | statements) 
+	parser = toplevel 
+
+	# debug
+	parser.setDebug()
 
 	# read the file into tokens
-	res = parser.parseFile(namedconf)
+	res = parser.parseFile(namedconf,parseAll=True)
 	results = res.asList()
 	# the next call will parse and set the options and return a new named.conf
 	content = parseStatement(results)
+
+	import pprint
+	pprint.pprint(res)
+
+	# This examples shows how to find the right position in the file
+	#parser.setParseAction(
+	#lambda origString,loc,tokens:
+	#	( tokens[0], lineno(loc,origString), col(loc,origString) )
+	#)
+	#fp = open("named.conf","r")
+	#stuff = "".join(fp.readlines())
+	#for toks,startLoc,endLoc in parser.scanString( stuff ):
+	#	print "%s: line %d, col %d" % toks[0]
+	#sys.exit()
 
 	# include keys when dnssec is enabled
 	if dnssec:
@@ -876,13 +891,14 @@ def parseStatement(parsed,depth=0,opt=0):
 					build = build[:-3] + "\n%s"%("\t"*depth) + "dnssec-lookaside . trust-anchor %s;\n};"%dlvzone 
 
 
-	result = re.sub("// \n","//\n", re.sub(" \n","\n", re.sub("\n\n","\n", build)))
+	result = re.sub("//","\n//", re.sub("// \n","//\n", re.sub(" \n","\n", re.sub("\n\n","\n", build))))
 
         if depth==0:
                 # don't return the 1st line, it's an inserted empty \n
                 return result[1:]
         else:
                 return result
+
 
 
 if __name__ == "__main__":
