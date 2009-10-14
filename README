@@ -15,6 +15,8 @@
 #              automated process. Use at own risk. Mostly used to detect
 #              new keys that were not announced anywhere
 
+# For TLD DNSSEC keys, please see http://www.xelerance.com/dnssec/
+
 # in-addr.arpa. itself is not signed, but some domains inside it are:
 # RIPE's in-addr.arpa. signed zones are obtained from RIPE's https server
 # See https://www.ripe.net/projects/disi//keys/
@@ -30,36 +32,7 @@
 # dlv.isc.org
 # ISC DLV Registry
 # See https://secure.isc.org/index.pl?/ops/dlv/index.php
-#
-# Museum .museum
-# http://about.museum/ is the NIC, no key URL known
-#
-# Puerto Rico .pr
-# See http://dnssec.nic.pr/keys/nic.pr.zip
-# Their website information does not list teir KSK, only their ZSK.
-# We configure to use the KSK.
-#
-# Bulgaria .bg
-# https://www.register.bg/user/ has some information, but no key url known
-#
-# Sweden .se
-# http://www.iis.se/domains/sednssec/publickey
-#
-# Brasil .br
-# https://registro.br/ksk/index.html
-# (displays badly in some browsers)
-#
-# Czech Republic .cz
-# http://www.nic.cz/dnssec/
-#
-# .gov (production)
-# https://www.dotgov.gov/dnssecinfo.aspx
-# Note: You might not be able to reach this page from outside the US.
-#        This is by (defective) design.
-#
-# .org (production signed, not accepting DS records yet)
-# http://pir.org/index.php?db=content/Website&tbl=ORG_Advantage&id=2.4
-#
+
 # The Root zone (test) and other test keys: http://ns.iana.org/
 # disabled because you will have to resolve via their nameserver for
 # these keys to work.
