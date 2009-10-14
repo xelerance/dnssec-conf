@@ -1,7 +1,10 @@
 v1.22
 - Use pyparsing to read/write named.conf. This fixes bug:
   https://bugzilla.redhat.com/show_bug.cgi?id=505754
+  There are still some named.conf files that fail to parse.
 - Use TCP 53 for DNSKEY queries
+- Updated prepublish keys
+- Moved Namibia and Thailand from testing to production
 
 v1.21
 - Enable DLV per default on systems that support /etc/sysconfig/dnssec
