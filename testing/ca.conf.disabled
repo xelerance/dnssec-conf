@@ -1,6 +1,7 @@
 //; /usr/bin/dnskey-pull -t -o ca.conf ca.
 //; 2009-10-14 15:04
 //; See http://www.cira.ca/dnssec/
+//; Shadow zone - requires using testbed auth nameservers!
 
 trusted-keys {
 "ca." 257 3 7 "AwEAAa55P9/LKjNeptjcQj6ariCZQe2duS+sAfDeCJl7I+EK/NXlZAMjY07nIiKfFS0/Bv9nbC7gWO81+KmTLRoUGJbWwBrdI+7Iw25w8S/6blEDHZXVxK7HJQR8FqUhPty9qjqBK3Z1PwGJGAit2DiQhmhFUNCVDIoIms9T+8MR+i+cwsdWpB2f4JGsPbs6f6aVxCu+2Gxg4SXm0vhdCkLIan3MG4DIYXaXhvg+ADjZiyKu0HnxRWBYpLipfsxHDXRGmb6GJio1CWasNKDGT+cfKGWSEQbRWstti9rjBpicuHtmiGRRrQxD+YihxE0dgJxN4rOZkh6gbB6Q8m5f+hMEgfU="; // key id = 33876
