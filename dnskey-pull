@@ -290,6 +290,7 @@ def getkey(zone,ns):
 				keyout += msg
 		return keyout
 	else:
+		print "no answers obtained"
 		return ""
 
 def getkeys(zone,ns):
