@@ -53,6 +53,11 @@ rm -rf ${RPM_BUILD_ROOT}
 %{_mandir}/*/*
 
 %changelog
+* Wed Oct 14 2009 Paul Wouters <paul@xelerance.com> - 1.22-1
+- Upgraded to 1.22
+- Resolves some named.conf parse errors
+- dnskey-pull now uses TCP to avoid networks with EDNS0 issues
+
 * Sun Jun 14 2009 Paul Wouters <paul@xelerance.com> - 1.21-1
 - upgraded to 1.21
 
