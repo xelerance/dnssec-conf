@@ -5,6 +5,7 @@ v1.22
 - Use TCP 53 for DNSKEY queries
 - Updated prepublish keys
 - Moved Namibia and Thailand from testing to production
+- Added testing key for Canada
 
 v1.21
 - Enable DLV per default on systems that support /etc/sysconfig/dnssec
