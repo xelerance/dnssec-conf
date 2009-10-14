@@ -266,11 +266,11 @@ def getkey(zone,ns):
 	# that one might not be a public open resolver.
 	# TODO: but the user knows best, so do it anyway
 	res = dns.resolver.Resolver()
-	res.use_edns(1, 0, 1400)
+	#res.use_edns(1, 0, 1400)
 	answers = ""
 	keyout = ""
 	try:
-		answers = res.query(zone,'DNSKEY')
+		answers = res.query(zone,'DNSKEY',tcp=True)
 	except:
 		#print "NO DNSKEY for %s"%zone
 		pass
@@ -290,6 +290,7 @@ def getkey(zone,ns):
 				keyout += msg
 		return keyout
 	else:
+		print "no answers obtained"
 		return ""
 
 def getkeys(zone,ns):
