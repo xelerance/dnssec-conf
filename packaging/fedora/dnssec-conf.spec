@@ -53,8 +53,13 @@ rm -rf ${RPM_BUILD_ROOT}
 %{_mandir}/*/*
 
 %changelog
+* Mon Mar 01 2010 Paul Wouters <paul@xelerance.com> - 1.23-1
+- Released 1.23
+- Switch to using TCP to fetch keys with dnskey-pull
+- Large update of TLD keys
+
 * Sun Jun 14 2009 Paul Wouters <paul@xelerance.com> - 1.21-1
-- upgraded to 1.21
+- Upgraded to 1.21
 
 * Tue Mar 17 2009 Paul Wouters <paul@xelerance.com> - 1.20-1
 - Upgraded to 1.20, which fixes DLV support for Bind and reverse keys for Bind
