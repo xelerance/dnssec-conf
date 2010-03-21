@@ -1,5 +1,9 @@
 v1.24
 - Fix typo in key file testing/xn--11b5bs3a9aj6g.conf
+- Update various RIPE keys and existing TLD keys
+- Use TCP per default, as UDP EDNS did not always work
+- Added Namibia and Thailand
+- Added Canada test bed
 
 v1.23
 - Added new TLDs: ch. li. na. nu. pt. th. tm. xn--zckzah
