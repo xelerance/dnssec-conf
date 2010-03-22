@@ -1,3 +1,7 @@
+v1.25
+- Use full path of unbound-checkconf and named-checkconf in case we're
+  run as non-root user via sudo
+
 v1.24
 - Fix typo in key file testing/xn--11b5bs3a9aj6g.conf
 - Update various RIPE keys and existing TLD keys
