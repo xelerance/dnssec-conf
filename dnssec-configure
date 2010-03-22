@@ -384,11 +384,11 @@ def restartDaemon(daemon):
 
 def checkUnboundConfig():
 	global unboundconf
-	checkConfig(unboundconf,"unbound-checkconf")
+	checkConfig(unboundconf,"/usr/sbin/unbound-checkconf")
 
 def checkBindConfig():
 	global namedconf
-	checkConfig(namedconf,"named-checkconf")
+	checkConfig(namedconf,"/usr/sbin/named-checkconf")
 
 # Check if bind version is 9.3.3 - 9.6.x
 def checkBindVersion():
