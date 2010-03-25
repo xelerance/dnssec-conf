@@ -1,6 +1,7 @@
 v1.25
 - Use full path of unbound-checkconf and named-checkconf in case we're
   run as non-root user via sudo
+- Updated RIPE trust anchors with their March 23 2010 versions
 
 v1.24
 - Fix typo in key file testing/xn--11b5bs3a9aj6g.conf
