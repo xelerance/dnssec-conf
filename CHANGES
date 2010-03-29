@@ -1,3 +1,9 @@
+v1.26
+- Updated .museum key
+- Updates some xn-- testdomain keys
+- Standarised comments in key file and layouy
+- Added expiry information as comments from itar
+ 
 v1.25
 - Use full path of unbound-checkconf and named-checkconf in case we're
   run as non-root user via sudo
