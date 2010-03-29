@@ -1,8 +1,0 @@
-//; https://ns.iana.org/dnssec/status.html
-//; These can only be used when using ns.iana.org as resolver 
-trusted-keys {
-//; key id = 46793
-"arpa." 257 3 5 "AwEAAae3GJEyZbIlriQimHEHmcGiOx9DrR1fOTPtoOIrmdZ2UKRPCPy+t1adALEN1uFsu3zeIQtQYF0cV+6oQwAYHXoUM6KESf3gG4sF2WUJHqJsGV/3wvERLcbeG8SXNwPNib6tQ0pvaTcSQ0zHvdlNuIxqOFL7VGfZyfTNIFmYIK89aZaNqsNfzCQCyfxezUQEFIAaqDJ3z/a/CJ6H9LQlHGhFOdFagetKHiQqvIHMOmFnc57r2mtpdNtv+EXHaIdFEYCXpJDFHQmpkMBWzEdbiPElQrJlJ/JhF9CO/Fv6TeebdDk7X2TWzIP2CVxBSFmyVNMc1/tKgtfw5HzOdV/rOes=";
-//; key id = 28808
-"arpa." 257 3 5 "AwEAAcGe8bTqSxvwHvanBDyEoV0RClXSQBlzMPsPKUlkCzwMTkjMjNOyJ6hLPA9b94ltE8bVhBNHMiZTm7UBniHtglnknyx3Uy4LALrBCxYERVfM28o+ij3kNoUAMlUZJYbcZ5E+frdmOoQ6IWxeYoXmqCOOl8lRbjT+gSy6hoaNvphD/U/VMnUpjPzI7tgYtPVvqe7QLh62HEjmzhs9CGqddmrFCAhufg/I8tPSGw++tRT9kI5mYN/Y35plx3WcUQ5fFdRqP6tFneKGCDIDYCtmfq6rjEmGBz5VHAVzJyzLtfAQBoEpAfvnQjOWqmoaMCFXF9E6yBEJaB7INtP7oYSqS3E=";
-};
