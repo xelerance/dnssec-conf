@@ -1,3 +1,7 @@
+v1.27
+- Check for bind 9.7.x as well
+- nocheck patch from redhat
+
 v1.26
 - Updated .museum key
 - Updates some xn-- testdomain keys
