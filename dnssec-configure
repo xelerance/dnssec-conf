@@ -401,7 +401,7 @@ def checkBindVersion():
 			sys.exit("ERROR: unknown Bind version '%s'- aborted:"%bversion)
 		if (bversion[5] in [ "4","8" ]):
 			sys.exit("ERROR: ANCIENT Bind version '%s' not supported. We only support 9.3.3 and higher"%bversion)
-		if (bversion[5] == "9") and (bversion[7] in [ "4","5","6" ]):
+		if (bversion[5] == "9") and (bversion[7] in [ "4","5","6","7" ]):
 			bversion = "newstyle"
 			return
 		elif (bversion[5] == "9") and (bversion[7] =="3"):
