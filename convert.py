@@ -1,10 +1,12 @@
 #!/usr/bin/python
 
 import re
+import os
 
 kf = "ripe-ncc-dnssec-keys-new.txt"
 fp = open(kf,"r")
 zname = ""
+second = 0
 
 for line in fp.readlines():
 
@@ -19,13 +21,20 @@ for line in fp.readlines():
 		line = "%s "%line
 		try:
 			if zname:
-				fz.write("\n\n};\n")
+				if not second:
+					fz.write("\n\n};\n")
 				fz.close()
 		except:
 			pass
 		zname = line.split('"')[1]
-		fz = open("/tmp/r/%sconf"%zname,"w")
-		fz.write("//; https://www.ripe.net/projects/disi//keys/ripe-ncc-dnssec-keys-new.txt\n//; 2010-03-23\ntrusted-keys {\n")
+		if os.path.isfile("/tmp/r/%sconf"%zname):
+			fz = open("/tmp/r/%sconf"%zname,"a")
+			second = 1
+		else:
+			fz = open("/tmp/r/%sconf"%zname,"w")
+			second = 0
+		if not second:
+			fz.write("//; https://www.ripe.net/projects/disi//keys/ripe-ncc-dnssec-keys-new.txt\n//; 2010-03-23\ntrusted-keys {\n")
 		fz.write(line)
 	else:
 		line = re.sub("Key ID=","key id =",line)
