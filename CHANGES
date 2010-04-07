@@ -1,3 +1,11 @@
+v1.29
+- Removed 7.0.193.in-addr.arpa. as RIPE did not mean to publish that
+  trust anchor seperately (there is a DS in 193.in-addr-arpa)
+
+v1.28
+- Added Sri Lanka key to testing
+- Added RIPE keys
+
 v1.27
 - Check for bind 9.7.x as well
 - nocheck patch from redhat
