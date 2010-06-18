@@ -1,6 +1,12 @@
 v1.29
 - Removed 7.0.193.in-addr.arpa. as RIPE did not mean to publish that
   trust anchor seperately (there is a DS in 193.in-addr-arpa)
+- Added Kyrgyzstan (.kg) to Production
+- Added Europe (.eu) to Production
+- Updated keys of museum. Unsure why there are now 6 KSKs
+- Added St. Pierre and Miquelon (.pm)
+- Moved uk. from testing to production
+- Added new key for Sweden (se. )
 
 v1.28
 - Added Sri Lanka key to testing
