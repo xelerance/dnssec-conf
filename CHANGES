@@ -1,6 +1,7 @@
 v2.0
 - Added root zone trust anchor
 - Removed all trust anchors that have a DS record in the root
+- Added biz. trust anchor
 
 v1.29
 - Removed 7.0.193.in-addr.arpa. as RIPE did not mean to publish that
