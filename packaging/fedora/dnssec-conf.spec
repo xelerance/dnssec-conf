@@ -52,6 +52,9 @@ rm -rf ${RPM_BUILD_ROOT}
 %{_mandir}/*/*
 
 %changelog
+* Wed Dec 15 2010 Paul Wouters <paul@xelerance.com> - 2.02-1
+- Updated to 2.02
+
 * Fri Jul 30 2010 Paul Wouters <paul@xelerance.com> - 2.00-1
 - -Migration to root key setup
 
