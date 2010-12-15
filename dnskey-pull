@@ -170,7 +170,7 @@ def main(argv=None):
 	global outputfp
 	for o, a in opts:
 		if o in ("-v", "--version"):
-			print "dnskey-pull version 1.28 "
+			print "dnskey-pull version 2.00"
 			print "Author:\n Paul Wouters <paul@xelerance.com>"
 			print "Source : http://www.xelerance.com/software/dnssec-conf/"
 			sys.exit()

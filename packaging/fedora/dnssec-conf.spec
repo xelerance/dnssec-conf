@@ -1,6 +1,6 @@
 Summary: DNSSEC and DLV configuration and priming tool
 Name: dnssec-conf
-Version: 1.28
+Version: 2.00
 Release: 1%{?dist}
 License: GPLv2+
 Url: http://www.xelerance.com/software/dnssec-conf/
@@ -53,6 +53,9 @@ rm -rf ${RPM_BUILD_ROOT}
 %{_mandir}/*/*
 
 %changelog
+* Fri Jul 30 2010 Paul Wouters <paul@xelerance.com> - 2.00-1
+- -Migration to root key setup
+
 * Mon Mar 01 2010 Paul Wouters <paul@xelerance.com> - 1.23-1
 - Released 1.23
 - Switch to using TCP to fetch keys with dnskey-pull
