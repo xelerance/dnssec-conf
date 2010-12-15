@@ -44,7 +44,6 @@ rm -rf ${RPM_BUILD_ROOT}
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/pki/dnssec-keys/*/*
 %attr(0755,root,root) %dir %{_sysconfdir}/pki/dnssec-keys/production
 %attr(0755,root,root) %dir %{_sysconfdir}/pki/dnssec-keys/production/reverse
-%attr(0755,root,root) %dir %{_sysconfdir}/pki/dnssec-keys/testing
 %attr(0755,root,root) %dir %{_sysconfdir}/pki/dnssec-keys/harvest
 %attr(0755,root,root) %dir %{_sysconfdir}/pki/dnssec-keys/dlv
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/sysconfig/dnssec
