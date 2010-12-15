@@ -1,5 +1,6 @@
 v2.02
 - Updates versions and CHANGES file
+- Remove testing/ support (it's either production or user keys now)
 
 v2.01
 - Delete all of RIPE's keys. They are in DLV, and arpa is signed.
