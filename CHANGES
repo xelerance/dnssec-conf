@@ -1,3 +1,12 @@
+v2.02
+- Updates versions and CHANGES file
+
+v2.01
+- Delete all of RIPE's keys. They are in DLV, and arpa is signed.
+  Though in-addr.arpa is not yet signed. But DLV will do for now.
+- Removed all remaining TLD keys - If TLD's didn't want to be in the root,
+  let them.
+
 v2.00
 - Added root zone trust anchor
 - Removed all trust anchors that have a DS record in the root

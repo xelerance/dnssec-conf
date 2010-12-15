@@ -1,6 +1,6 @@
 Summary: DNSSEC and DLV configuration and priming tool
 Name: dnssec-conf
-Version: 2.00
+Version: 2.02
 Release: 1%{?dist}
 License: GPLv2+
 Url: http://www.xelerance.com/software/dnssec-conf/
